@@ -6,6 +6,7 @@ from mpl_toolkits.mplot3d import Axes3D
 import cvxpy as cvx
 import time
 from util import *
+from module_deconv import *
 
 ## testing bench 
 def simu_dd(p,x,param_list,rep_time,output_folder):
@@ -17,9 +18,9 @@ def simu_dd(p,x,param_list,rep_time,output_folder):
         N_c=param_list[i,0]
         N_r=param_list[i,1]
         for j in range(rep_time):
-            Y_pdf=data_gen_poi(p,x,N_c,N_r)
-            p_hat_dd,dd_info=dd_1d(Y_pdf,x,N_c,N_r)
-            p_hat_ml=esti_ml(Y_pdf,x,N_c,N_r)
+            Y_pdf,Y_supp=data_gen_1d(p,x,N_c,N_r,noise='poi')
+            p_hat_dd,dd_info=deconv_1d(Y_pdf,Y_supp,x,N_c,N_r,noise='poi',opt='dd')
+            p_hat_ml=esti_ml(Y_pdf,Y_supp,x,N_c,N_r)
             if p_hat_dd is not None:
                 res_dd[i,j]=dd_evaluation(p,p_hat_dd)
             else:
