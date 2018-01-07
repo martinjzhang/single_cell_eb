@@ -18,19 +18,23 @@ def simu_dd(p,x,param_list,rep_time,output_folder):
         N_c=param_list[i,0]
         N_r=param_list[i,1]
         for j in range(rep_time):
-            Y_pdf,Y_supp=data_gen_1d(p,x,N_c,N_r,noise='poi')
-            p_hat_dd,dd_info=deconv_1d(Y_pdf,Y_supp,x,N_c,N_r,noise='poi',opt='dd')
-            p_hat_ml=esti_ml(Y_pdf,Y_supp,x,N_c,N_r)
-            if p_hat_dd is not None:
-                res_dd[i,j]=dd_evaluation(p,p_hat_dd)
-            else:
-                print 'error'
-            res_ml[i,j]=dd_evaluation(p,p_hat_ml)
+            # generating the result and perform estimation
+            X,Y,data_info         = data_gen_1d(p,x,N_c,N_r,noise='poi')
+            p_hat_dd,x_dd,dd_info = deconv_1d(Y,noise='poi',opt='dd',n_xsupp=101)
+            p_hat_ml,x_ml,ml_info = ml_1d(Y)       
+            
+            ## evaluate the error 
+            x_dd = x_dd*dd_info['N_r']/(N_r+0.0)
+            x_ml = x_ml*ml_info['N_r']/(N_r+0.0)    
+            res_dd[i,j] = dist_W1(p,p_hat_dd,x,x_dd)
+            res_ml[i,j] = dist_W1(p,p_hat_ml,x,x_ml)
+        print np.mean(res_dd[i,:]),np.mean(res_ml[i,:]),N_r,N_c
                 
                 
     ## store the results
     plt.figure()
-    plt.plot(x,p,marker='o')
+    plot_density_1d(p,x)
+    plt.legend()
     plt.savefig(output_folder+'/true_dist.png')
     plt.close()
     
@@ -47,18 +51,23 @@ def simu_dd(p,x,param_list,rep_time,output_folder):
         best_param.append(list(param_list[B_list==B,:][temp,0:2]))
     best_param=np.array(best_param)
     
-    
+    vmax_ = np.max(np.log(err_dd))
+    vmin_ = np.min(np.log(err_dd))
     plt.figure(figsize=[20,8])    
     plt.subplot(1,2,1)
-    plt.scatter(np.log(param_list[:,0]),param_list[:,1], s=1000, c=err_dd,cmap='viridis',vmin=0, vmax=0.4)
+    #plt.scatter(np.log(param_list[:,0]),param_list[:,1], s=1000, c=err_dd,cmap='viridis',vmin=0, vmax=0.4)
+    plt.scatter(np.log(param_list[:,0]),param_list[:,1], s=2e4*err_dd, c=np.log(err_dd),cmap='viridis',vmin=vmin_, vmax=vmax_)
     plt.plot(np.log(best_param[:,0]),best_param[:,1],marker='o',color='r')
     plt.xlabel('log Nc')
     plt.ylabel('Nr')
     plt.title('density deconvolution')
     plt.colorbar()
     
+    vmax_ = np.max(np.log(err_ml))
+    vmin_ = np.min(np.log(err_ml))
     plt.subplot(1,2,2)
-    plt.scatter(np.log(param_list[:,0]),param_list[:,1], s=1000, c=err_ml,cmap='viridis',vmin=0, vmax=1)
+    #plt.scatter(np.log(param_list[:,0]),param_list[:,1], s=1000, c=err_ml,cmap='viridis',vmin=0, vmax=1)
+    plt.scatter(np.log(param_list[:,0]),param_list[:,1], s=2e4*err_ml, c=np.log(err_ml),cmap='viridis',vmin=vmin_, vmax=vmax_)
     plt.xlabel('log Nc')
     plt.ylabel('Nr')
     plt.title('maximum likelihood')

@@ -1,5 +1,6 @@
 import numpy as np
 import scipy as sp
+import scipy.stats
 import scipy.sparse as sp_sparse
 import matplotlib.pyplot as plt
 import h5py
@@ -82,6 +83,9 @@ def dist_kl(p1,p2):
 def dist_tv(p1,p2):
     return 0.5*np.linalg.norm(p1-p2,ord=1)
 
+def dist_W1(p1,p2,x1,x2):
+    return sp.stats.wasserstein_distance(x1, x2, u_weights=p1, v_weights=p2)
+
 def quantize(p,x,n_bin=10):
     x_q = []
   
@@ -115,6 +119,7 @@ def pre_process(X,gene_name):
 def plot_density_1d(p,x):
     M1,M2 = moments(p,x)
     plt.plot(x,p,marker='o',label='mean:%s, var:%s'%(str(M1)[0:6],str(M2-M1**2)[0:6]))
+    #plt.bar(x,p,label='mean:%s, var:%s'%(str(M1)[0:6],str(M2-M1**2)[0:6]))
     
 
 def plot_density_2d(p,x):

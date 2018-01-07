@@ -12,8 +12,8 @@ from util import *
 ## toy distribution
 def toy_dist(opt='1d',vis=0):
     if opt == '1d':
-        p = np.array([0.2,0.3,0.4,0.1,0,0,0,0,0,0])
-        x = np.linspace(0,0.9,10)
+        p = np.array([0,0.2,0.3,0.4,0.1,0,0,0,0,0])
+        x = np.array([0,0.05,0.15,0.25,0.35,0.4,0.5,0.6,0.7,1.0])
         if vis == 1:
             plt.figure()
             plot_density_1d(p,x)
@@ -29,22 +29,29 @@ def toy_dist(opt='1d',vis=0):
     return p,x
 
 ## data generation
-def data_gen_1d(p,x,N_c,N_r,return_data=0,noise='poi'):
+def data_gen_1d(p,x,N_c,N_r,noise='poi'):
     n_supp = p.shape[0]
     x_samp = np.random.choice(x,N_c, p=p,replace=True)
     if noise == 'poi':
         Y=np.random.poisson(x_samp*N_r)
     elif noise == 'bin':
         Y=np.random.binomial(N_r,x_samp)
-        
-    Y_pdf=np.bincount(Y)
-    Y_pdf=Y_pdf/(Y.shape[0]+0.0)
-    Y_supp=np.arange(Y_pdf.shape[0])
-    
-    if return_data == 0:
-        return Y_pdf,Y_supp
-    else:
-        return Y_pdf,Y_supp,x_samp,Y
+    ## recording the data information
+    data_info={}
+    data_info['x']     = x
+    data_info['p']     = p
+    data_info['N_c']   = N_c
+    data_info['N_r']   = N_r
+    data_info['noise'] = noise
+    return x_samp,Y,data_info
+    #Y_pdf=np.bincount(Y)
+    #Y_pdf=Y_pdf/(Y.shape[0]+0.0)
+    #Y_supp=np.arange(Y_pdf.shape[0])
+    #
+    #if return_data == 0:
+    #    return Y_pdf,Y_supp
+    #else:
+    #    return Y_pdf,Y_supp,x_samp,Y
 
 def data_gen_poi_2d(p,x,N_c=1000,N_r=10):
     #start=time.time()
@@ -103,23 +110,48 @@ def hist_2d(Y):
     return Y_pdf,Y_supp
 
 ## estimation methods 
-def deconv_1d(Y_pdf,Y_supp,x,N_c,N_r,noise='poi',opt='dd',lamb=0.1):
-    ## parameter setting    
-    n_supp=x.shape[0]
-    n_obs=Y_pdf.shape[0]
-    delta=1e-2
-    #min_clamp=0.01
+def counts2pdf_1d(Y):
+    Y_pdf=np.bincount(Y)
+    Y_pdf=Y_pdf/(Y.shape[0]+0.0)
+    Y_supp=np.arange(Y_pdf.shape[0])
+    return Y_pdf,Y_supp
+
+def cal_Nr(Y): # we use this function to define the data driven N_r for a
+    N_r = np.percentile(Y,99) # N_r should be roughly Y_max. The 95% percentile is used for robustness consideration
+    return N_r
+
+#def esti_ml(Y_pdf,Y_supp,x,N_c,N_r): # with no rounding to the nearest neighbour
+def ml_1d(Y): # with no rounding to the nearest neighbour
+    Y_pdf,Y_supp = counts2pdf_1d(Y)
+    N_c          = Y.shape[0]
+    N_r          = cal_Nr(Y)
+    p_hat        = Y_pdf
+    x            = Y_supp/(N_r+0.0)
+    
+    # recording the information
+    ml_info={}
+    ml_info['Y_pdf']  = Y_pdf
+    ml_info['Y_supp'] = Y_supp
+    ml_info['x']      = x
+    ml_info['N_c']    = N_c
+    ml_info['N_r']    = N_r
+    return p_hat,x,ml_info
+
+#def deconv_1d(Y,x,N_c,N_r,noise='poi',opt='dd',lamb=0.1):
+def deconv_1d(Y,noise='poi',opt='dd',lamb=0.1,n_xsupp=11):
+    ## converting the read counts to some sufficient statistics
+    Y_pdf,Y_supp = counts2pdf_1d(Y)
+    
+    ## parameter setting   
+    N_c    = Y.shape[0]
+    N_r    = cal_Nr(Y)
+    x      = np.linspace(0,1,n_xsupp)
+    n_supp = x.shape[0]
+    n_obs  = Y_supp.shape[0]
+    delta  = 1e-2
     
     ## calculate the noise channel matrix, P_model: n_obs * n_supp
-    if noise == 'poi':
-        P_model=sp.stats.poisson.pmf(np.repeat(np.reshape(np.arange(n_obs),[n_obs,1]),n_supp,axis=1),\
-                                    np.repeat(np.reshape(x*N_r,[1,n_supp]),n_obs,axis=0))
-    elif noise == 'bin':
-        P_model=sp.stats.binom.pmf(np.repeat(np.reshape(np.arange(n_obs),[n_obs,1]),n_supp,axis=1),N_r,\
-                                    np.repeat(np.reshape(x,[1,n_supp]),n_obs,axis=0))
-    else: 
-        print 'Err: noise type not recognized!'
-        return
+    P_model = Pmodel_cal(x,Y_supp,N_r,noise=noise)
     
     ## calculating the confidence interval
     Y_pdf_ub = np.zeros([n_obs],dtype=float)
@@ -165,7 +197,8 @@ def deconv_1d(Y_pdf,Y_supp,x,N_c,N_r,noise='poi',opt='dd',lamb=0.1):
         prob.solve()
     
     ## output the result
-    p_hat=np.array(p_hat_cvx.value).flatten() 
+    p_hat = np.array(p_hat_cvx.value).flatten().clip(min=0)
+    p_hat/= np.sum(p_hat)
         
     ## other informations 
     dd_info = {}
@@ -177,9 +210,49 @@ def deconv_1d(Y_pdf,Y_supp,x,N_c,N_r,noise='poi',opt='dd',lamb=0.1):
     dd_info['x']        = x
     dd_info['N_c']      = N_c
     dd_info['N_r']      = N_r    
-    return p_hat,dd_info
+    return p_hat,x,dd_info
 
-def dd_moments_1d(Y_pdf,Y_supp,x,N_c,N_r,k=2,noise='poi'):
+# functions called by deconv_1d
+def Pmodel_cal(x,Y_supp,N_r,noise='poi'):
+    n_supp = x.shape[0]
+    n_obs  = Y_supp.shape[0]
+    if noise == 'poi':
+        P_model=sp.stats.poisson.pmf(np.repeat(np.reshape(np.arange(n_obs),[n_obs,1]),n_supp,axis=1),\
+                                    np.repeat(np.reshape(x*N_r,[1,n_supp]),n_obs,axis=0))
+    elif noise == 'bin':
+        P_model=sp.stats.binom.pmf(np.repeat(np.reshape(np.arange(n_obs),[n_obs,1]),n_supp,axis=1),N_r,\
+                                    np.repeat(np.reshape(x,[1,n_supp]),n_obs,axis=0))
+    else: 
+        print 'Err: noise type not recognized!'
+        return
+    return P_model
+    
+def binomial_ci_cp(k,n,delta):
+    """
+    http://en.wikipedia.org/wiki/Binomial_proportion_confidence_interval
+    alpha confidence intervals for a binomial distribution of k expected successes on n trials
+    Clopper Pearson intervals are a conservative estimate.
+    Modified from https://gist.github.com/DavidWalz/8538435
+    """
+    if k==0:
+        lb=0
+        ub=(1-(delta/2.0)**(1/(n+0.0)))
+    elif k==n:
+        lb=(delta/2.0)**(1/(n+0.0))
+        ub=1
+    else:
+        lb = sp.stats.beta.ppf(delta/2, k, n-k+1)
+        ub = sp.stats.beta.ppf(1-delta/2, k+1, n-k)
+    return max(lb,0), min(ub,1)
+
+#def dd_moments_1d(Y_pdf,Y_supp,x,N_c,N_r,k=2,noise='poi'):
+def dd_moments_1d(Y,k=2,noise='poi'):
+    ## converting the read counts to some sufficient statistics
+    Y_pdf,Y_supp = counts2pdf_1d(Y)
+    ## parameter setting   
+    N_c    = Y.shape[0]
+    N_r    = cal_Nr(Y)
+    
     M_hat = np.zeros(k)   
     if noise == 'poi':
         for i in range(k):
@@ -187,7 +260,6 @@ def dd_moments_1d(Y_pdf,Y_supp,x,N_c,N_r,k=2,noise='poi'):
                 temp = 1
                 for l in range(i+1):
                     temp *= Y_supp[j]-l
-                print i,Y_pdf[j], temp
                 M_hat[i] += Y_pdf[j] * temp
             M_hat[i] /= (N_r**(i+1)+0.0)
     if noise == 'bin':
@@ -197,16 +269,31 @@ def dd_moments_1d(Y_pdf,Y_supp,x,N_c,N_r,k=2,noise='poi'):
                     M_hat[i] += Y_pdf[j]*sp.special.comb(Y_supp[j], i+1)/(sp.special.comb(N_r, i+1)+0.0)
     mean_hat = M_hat[0]
     var_hat  = M_hat[1]-M_hat[0]**2
-    return mean_hat,var_hat,M_hat
-        
+    return mean_hat,var_hat,M_hat,N_r
+def M_convert(M,N_r1,N_r2):
+    M2 = np.zeros(M.shape,dtype=float)
+    r  = N_r1/(N_r2+0.0)
+    for i in range(M2.shape[0]):
+        M2[i] = M[i]*r**(i+1)
+    mean2 = M2[0]
+    var2  = M2[1]-M2[0]**2
+    return mean2,var2,M2
 
-def denoise_1d(Y,N_r,x,p=None,noise='poi',opt='dd',lamb=0.1):
+#def denoise_1d(Y,N_r,x,p=None,noise='poi',opt='dd',lamb=0.1):
+def denoise_1d(Y,data_info=None,noise='poi',opt='dd',lamb=0.1):
     ## if p is not given, using density deconvolution to estimate p
-    if p is None: 
+    if data_info is None: 
         N_c    = Y.shape[0]
         Y_pdf  = np.bincount(Y)/(N_c+0.0)
         Y_supp = np.arange(Y_pdf.shape[0])
-        p,_    = deconv_1d(Y_pdf,Y_supp,x,N_c,N_r,noise=noise,opt=opt,lamb=lamb)
+        #p,_    = deconv_1d(Y_pdf,Y_supp,x,N_c,N_r,noise=noise,opt=opt,lamb=lamb)
+        p,x,dd_info = deconv_1d(Y,noise=noise,opt=opt,lamb=lamb)
+        N_r    = dd_info['N_r']
+    else: 
+        p   = data_info['p']
+        x   = data_info['x']
+        N_r = data_info['N_r'] 
+        
     ## calculate the Bayes estimate of x for each value of y: E[X|Y=y]
     x_hat_dic = {}
     for y in np.unique(Y):
@@ -221,8 +308,10 @@ def denoise_1d(Y,N_r,x,p=None,noise='poi',opt='dd',lamb=0.1):
     x_hat = np.zeros(Y.shape[0],dtype=float)
     for i in range(x_hat.shape[0]):
         x_hat[i] = x_hat_dic[Y[i]]
-    return x_hat
+    return x_hat,N_r
 
+def GC_convert(x1,N_r1,N_r2):
+    return x1*N_r1/(N_r2+0.0)
 def dd_2d(Y_pdf,Y_supp,x,N_c,N_r,option='mml',lamb=0.1):
     print '------ dd_2d start, option:%s, lambda:%s'%(option,str(lamb))
     start  = time.time()
@@ -339,58 +428,38 @@ def dd_2d(Y_pdf,Y_supp,x,N_c,N_r,option='mml',lamb=0.1):
 #        ub=(1-(delta/2.0)**(1/(N_c+0.0)))
 #    return max(lb,0), min(ub,1)
 
-def binomial_ci_cp(k,n,delta):
-    """
-    http://en.wikipedia.org/wiki/Binomial_proportion_confidence_interval
-    alpha confidence intervals for a binomial distribution of k expected successes on n trials
-    Clopper Pearson intervals are a conservative estimate.
-    Modified from https://gist.github.com/DavidWalz/8538435
-    """
-    if k==0:
-        lb=0
-        ub=(1-(delta/2.0)**(1/(n+0.0)))
-    elif k==n:
-        lb=(delta/2.0)**(1/(n+0.0))
-        ub=1
-    else:
-        lb = sp.stats.beta.ppf(delta/2, k, n-k+1)
-        ub = sp.stats.beta.ppf(1-delta/2, k+1, n-k)
-    return max(lb,0), min(ub,1)
-
-
-def esti_ml(Y_pdf,Y_supp,x,N_c,N_r):
-    n_obs=Y_pdf.shape[0]
-    Y_supp=Y_supp/(N_r+0.0)
-    if len(Y_supp.shape)==1:
-        Y_supp=np.reshape(Y_supp,[n_obs,1])
-        x=np.reshape(x,[x.shape[0],1])
-    p_hat=np.zeros(x.shape[0],dtype=float)
-    for i in range(Y_supp.shape[0]):
-        p_hat[np.argmin(np.linalg.norm(x-Y_supp[i,:],axis=1))]+=Y_pdf[i]
-    return p_hat
-
 def dd_evaluation(p,p_hat):
     return np.linalg.norm(p_hat-p,ord=1)
    
 
 ## visualization of the distribution estimation result
-def plot_dd_result(p,p_hat,dd_info):
-    p_hat_ml=esti_ml(dd_info['Y_pdf'],dd_info['Y_supp'],dd_info['x'],dd_info['N_c'],dd_info['N_r'])        
-    err_dd=np.linalg.norm(p_hat-p,ord=1)
-    err_ml=np.linalg.norm(p_hat_ml-p,ord=1)
+def plot_result_1d(p,p_hat,p_hat_ml,dd_info,ml_info,data_info):
+    ## load some important parameters
+    x    = data_info['x'] # the true support 
+    x_dd = dd_info['x']*dd_info['N_r']/(data_info['N_r']+0.0) # the support assumed by deconv
+    x_ml = ml_info['x']*dd_info['N_r']/(data_info['N_r']+0.0)
+    
+    ## ml estimation
+    #p_hat_ml,x_ml = esti_ml(dd_info['Y_pdf'],dd_info['Y_supp'],dd_info['x'],dd_info['N_c'],dd_info['N_r'])        
+    #err_dd=np.linalg.norm(p_hat-p,ord=1)
+    #err_ml=np.linalg.norm(p_hat_ml-p,ord=1)
+    err_dd = dist_W1(p,p_hat,x,x_dd)
+    err_ml = dist_W1(p,p_hat_ml,x,x_ml)
     
     if len(dd_info['Y_supp'].shape)==1:
+        # first figure: the confidence interval
+        P_model = Pmodel_cal(x,dd_info['Y_supp'],data_info['N_r'],noise=data_info['noise'])
         plt.figure(figsize=[12,5])
         plt.subplot(1,2,1)
-        plt.plot(np.log(dd_info['P_model'].dot(p)+0.01),label='true value')
-        plt.plot(np.log(dd_info['P_model'].dot(p_hat)+0.01),label='recovered value')
-        plt.plot(np.log(dd_info['Y_pdf_ub']+0.01),label='upper bound')
-        plt.plot(np.log(dd_info['Y_pdf_lb']+0.01),label='lower bound')
+        plt.plot(dd_info['Y_supp'],np.log(P_model.dot(p)+0.001),label='true value')
+        plt.plot(dd_info['Y_supp'],np.log(dd_info['P_model'].dot(p_hat)+0.001),label='recovered value')
+        plt.plot(dd_info['Y_supp'],np.log(dd_info['Y_pdf_ub']+0.001),label='upper bound')
+        plt.plot(dd_info['Y_supp'],np.log(dd_info['Y_pdf_lb']+0.001),label='lower bound')
         plt.legend()
         plt.subplot(1,2,2)
-        plt.plot(dd_info['x'],p_hat_ml,marker='o',label='ML: %s'%str(err_ml)[0:6])
-        plt.plot(dd_info['x'],p_hat,marker='o',label='density decov: %s'%str(err_dd)[0:6])
-        plt.plot(dd_info['x'],p,marker='o',label='true distribution')
+        plt.plot(x_ml,np.cumsum(p_hat_ml),marker='o',label='ml: %s'%str(err_ml)[0:6],alpha=0.6)
+        plt.plot(x_dd,np.cumsum(p_hat),marker='o',label='deconv: %s'%str(err_dd)[0:6],alpha=0.6)
+        plt.plot(x,np.cumsum(p),marker='o',label='true distribution',alpha=0.6)
         plt.legend()
         plt.show()
     elif len(dd_info['Y_supp'].shape)==2:
