@@ -22,6 +22,10 @@ def toy_dist(opt='1d',vis=0):
             plt.title('toy distribution')
             plt.legend()
             plt.show()
+    elif opt == 'test_case1':
+        p = np.array([0,1,0,0.1,0.02,0,0.01,0,0.02,0.05])
+        p /= np.sum(p)
+        x = np.array([0,0.05,0.15,0.25,0.35,0.4,0.5,0.6,0.7,1.0])
     elif opt == '2d':
         pass
     else: 
