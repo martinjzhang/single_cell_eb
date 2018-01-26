@@ -229,13 +229,25 @@ def plot_result_1d(p,p_hat,p_hat_ml,dd_info,ml_info,data_info):
     if len(dd_info['Y_supp'].shape)==1:
         # first figure: the confidence interval
         P_model = Pmodel_cal(x,dd_info['Y_supp'],data_info['N_r'],noise=data_info['noise'])
-        plt.figure(figsize=[12,5])
-        #plt.subplot(121)
-        #plt.subplot(122)
+        x_s = np.linspace(0,1,101)
+        plt.figure(figsize=[18,5])
+        plt.subplot(121)
+        plt.plot(x_s,supp_trans(p_hat_ml,x_ml,x_s),linewidth=4,label='ml: %s'%str(err_ml)[0:6],alpha=0.6)
+        plt.plot(x_s,supp_trans(p_hat,x_dd,x_s),linewidth=4,label='deconv: %s'%str(err_dd)[0:6],alpha=0.6)
+        plt.plot(x_s,supp_trans(p,x,x_s),linewidth=4,label='true distribution',alpha=0.6)
+        plt.legend()
+        plt.title('pdf')
+        plt.subplot(122)
         plt.plot(x_ml,np.cumsum(p_hat_ml),marker='o',label='ml: %s'%str(err_ml)[0:6],alpha=0.6)
         plt.plot(x_dd,np.cumsum(p_hat),marker='o',label='deconv: %s'%str(err_dd)[0:6],alpha=0.6)
         plt.plot(x,np.cumsum(p),marker='o',label='true distribution',alpha=0.6)
-        plt.title('reconstruction result')
+        plt.title('cdf')
         plt.legend()
         plt.show()
     return err_dd,err_ml
+
+def supp_trans(p,x,x_new):
+    cdf        = np.cumsum(p)
+    p_new      = np.interp(x_new,x,cdf)
+    p_new[1:] -= p_new[0:-1]
+    return p_new
