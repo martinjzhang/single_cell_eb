@@ -66,8 +66,8 @@ def load_10x():
     return X,X_label,gene_name
 
 def data_summary(X,X_label,gene_name):
-    print '###### Summary ######'
-    print 'GC matrix: ',X.shape
-    print 'number of genes:', len(gene_name)
+    print('###### Summary ######')
+    print('GC matrix: ',X.shape)
+    print('number of genes:', len(gene_name))
     #print 'number of clusters:', np.unique(X_label).shape[0]
-    print '###### End Summary ######'
+    print('###### End Summary ######')

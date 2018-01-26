@@ -1,6 +1,7 @@
 import numpy as np
 import scipy as sp
 import scipy.stats
+from scipy.stats import wasserstein_distance
 import scipy.sparse as sp_sparse
 import matplotlib.pyplot as plt
 import h5py

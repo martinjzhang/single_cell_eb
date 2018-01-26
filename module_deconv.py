@@ -33,7 +33,7 @@ def toy_dist(opt='1d',vis=0):
     return p,x
 
 ## data generation
-def data_gen_1d(p,x,N_c,N_r,noise='poi'):
+def data_gen_1d(p,x,N_c,N_r,noise='poi',vis=0):
     n_supp = p.shape[0]
     x_samp = np.random.choice(x,N_c, p=p,replace=True)
     if noise == 'poi':
@@ -47,6 +47,14 @@ def data_gen_1d(p,x,N_c,N_r,noise='poi'):
     data_info['N_c']   = N_c
     data_info['N_r']   = N_r
     data_info['noise'] = noise
+    
+    if vis==1:
+        plt.figure(figsize=[12,5])
+        plt.subplot(121)
+        plt.hist(x_samp)
+        plt.subplot(122)
+        plt.hist(Y)
+        plt.show()
     return x_samp,Y,data_info
     #Y_pdf=np.bincount(Y)
     #Y_pdf=Y_pdf/(Y.shape[0]+0.0)
