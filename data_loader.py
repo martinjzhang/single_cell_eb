@@ -8,7 +8,7 @@ from util import *
 ## data loading
 def load_Zeisel():
     X_label={}
-    fil_Zeisel='/home/martin/data/single_cell/Zeisel/expression_mRNA_17-Aug-2014.txt'
+    fil_Zeisel='/data/martin/data/single_cell/Zeisel/expression_mRNA_17-Aug-2014.txt'
     f=open(fil_Zeisel,'rU')
     X=[]
     gene_name=[]
@@ -42,8 +42,8 @@ def load_Zeisel():
 def load_10x():
     X_label={}
     X=None
-    fil_path='/home/martin/data/single_cell/10x_1.3mil_mice_brain/1M_neurons_filtered_gene_bc_matrices_h5.h5'
-    fil_cluster_path='/home/martin/single_cell_eb/data/10x_1.3mil_mice_brain/analysis/clustering/graphclust/clusters.csv'
+    fil_path='/data/martin/single_cell/10x_1.3mil_mice_brain/1M_neurons_filtered_gene_bc_matrices_h5.h5'
+    fil_cluster_path='/data/martin/single_cell/10x_1.3mil_mice_brain/analysis/clustering/graphclust/clusters.csv'
     
     ## load the data matrix and the gene names
     f=h5py.File(fil_path)
