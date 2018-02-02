@@ -117,11 +117,19 @@ def pre_process(X,gene_name):
     return X,gene_name
     
 ## some plotting functions
+#def plot_density_1d(p,x):
+#    M1,M2 = moments(p,x)
+#    plt.plot(x,p,marker='o',label='mean:%s, var:%s'%(str(M1)[0:6],str(M2-M1**2)[0:6]))
+#    #plt.bar(x,p,label='mean:%s, var:%s'%(str(M1)[0:6],str(M2-M1**2)[0:6]))
 def plot_density_1d(p,x):
     M1,M2 = moments(p,x)
-    plt.plot(x,p,marker='o',label='mean:%s, var:%s'%(str(M1)[0:6],str(M2-M1**2)[0:6]))
-    #plt.bar(x,p,label='mean:%s, var:%s'%(str(M1)[0:6],str(M2-M1**2)[0:6]))
-    
+    X=np.random.choice(x, 2000, p=p)
+    plt.figure(figsize=[8,5])
+    plt.plot(x,p,marker='.',lw=2,markersize=0,color="royalblue",label='mean:%s, var:%s'%(str(M1)[0:6],str(M2-M1**2)[0:6]))
+    plt.fill_between(x, p, facecolor='royalblue', alpha=0.5)
+    plt.plot(X, [-0.01]*len(X), '|', color='k',alpha=0.05)
+    plt.xlim([0,1])
+    #plt.ylim([0,1.05*np.max(p)])    
 
 def plot_density_2d(p,x):
     plt.scatter(x[:,0], x[:,1],s=5000*p,alpha=0.8,c=p,cmap='viridis')
