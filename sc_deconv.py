@@ -60,13 +60,15 @@ def data_gen_1d(p,x,N_c,N_r,noise='poi',vis=0):
 
 
 ## distribution estimation: density deconvolution
-def dd_1d(Y,noise='poi',vis=0,N_r=None):    
+def dd_1d(Y,noise='poi',verbose=False,N_r=None):    
     ## converting the read counts to some sufficient statistics
     Y_pdf,Y_supp = counts2pdf_1d(Y)    
     
     ## setting parameters 
     if N_r is None:
         N_r = cal_Nr(Y)
+        if verbose: print('Nr:%s'%str(N_r))
+            
     x       = np.linspace(0,1,101)
     Q       = Q_gen()
     P_model = Pmodel_cal(x,Y_supp,N_r,noise='poi')
@@ -92,7 +94,7 @@ def dd_1d(Y,noise='poi',vis=0,N_r=None):
     dd_info['N_r']      = N_r
     dd_info['Y_pdf']    = Y_pdf
     dd_info['Y_supp']   = Y_supp
-    if vis == 1:
+    if verbose:
         plt.figure()
         plot_density_1d(p_hat,x)
         plt.xlabel('support')
@@ -112,14 +114,14 @@ def px_cal(Q,alpha):
     
 def l_cal(alpha,Y_pdf,P_model,Q):
     P_X = px_cal(Q,alpha)
-    l   = np.sum(Y_pdf*np.log(P_model.dot(P_X)))  
+    l   = np.sum(Y_pdf*np.log(P_model.dot(P_X)+1e-8))  
     return l
     
 
 def grad_cal(alpha,Y_pdf,P_model,Q):    
     P_X = px_cal(Q,alpha) # P_X        
     P_Y = P_model.dot(P_X) # P_Y    
-    W = (((P_model.T/P_Y).T-1)*P_X).T # gradient
+    W = (((P_model.T/(P_Y+1e-8)).T-1)*P_X).T # gradient
     grad = Q.T.dot(W.dot(Y_pdf))
     return grad
     
