@@ -60,7 +60,7 @@ def data_gen_1d(p,x,N_c,N_r,noise='poi',vis=0):
 
 
 ## distribution estimation: density deconvolution
-def dd_1d(Y,noise='poi',verbose=False,N_r=None):    
+def dd_1d(Y,noise='poi',verbose=False,N_r=None,resolution=2):    
     ## converting the read counts to some sufficient statistics
     Y_pdf,Y_supp = counts2pdf_1d(Y)    
     
@@ -69,8 +69,8 @@ def dd_1d(Y,noise='poi',verbose=False,N_r=None):
         N_r = cal_Nr(Y)
         if verbose: print('Nr:%s'%str(N_r))
             
-    x       = np.linspace(0,1,101)
-    Q       = Q_gen()
+    x       = np.linspace(0,1,max(101,int(1/N_r*resolution)))
+    Q       = Q_gen(x)
     P_model = Pmodel_cal(x,Y_supp,N_r,noise='poi')
     
     ## gradient checking
@@ -125,8 +125,8 @@ def grad_cal(alpha,Y_pdf,P_model,Q):
     grad = Q.T.dot(W.dot(Y_pdf))
     return grad
     
-def Q_gen(vis=0): # generating a natural spline from B-spline basis
-    x = np.linspace(0,1,101)
+def Q_gen(x=None,vis=0): # generating a natural spline from B-spline basis
+    if x is None: x = np.linspace(0,1,101)
     t = np.linspace(0,1,9)
     Q = np.zeros([x.shape[0],5],dtype=float)
     for i in range(5):
