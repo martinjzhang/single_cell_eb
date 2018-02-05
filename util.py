@@ -124,11 +124,22 @@ def pre_process(X,gene_name):
 def plot_density_1d(p,x):
     M1,M2 = moments(p,x)
     X=np.random.choice(x, 2000, p=p)
-    plt.figure(figsize=[8,5])
+    plt.figure(figsize=[18,5])
+    plt.subplot(121)
     plt.plot(x,p,marker='.',lw=2,markersize=0,color="royalblue",label='mean:%s, var:%s'%(str(M1)[0:6],str(M2-M1**2)[0:6]))
     plt.fill_between(x, p, facecolor='royalblue', alpha=0.5)
     plt.plot(X, [-0.01]*len(X), '|', color='k',alpha=0.05)
     plt.xlim([0,1])
+    plt.subplot(122)
+    plt.plot(x,p,marker='.',lw=2,markersize=0,color="royalblue",label='mean:%s, var:%s'%(str(M1)[0:6],str(M2-M1**2)[0:6]))
+    plt.fill_between(x, p, facecolor='royalblue', alpha=0.5)
+    plt.plot(X, [-0.01]*len(X), '|', color='k',alpha=0.05)
+    plt.xlim([0.2,1])
+    plt.ylim([0,1.5*np.max(p[x>0.2])])
+    
+    print('--- ccdf ---')
+    for i in [0.05,0.1,0.15,0.2,0.25,0.3,0.35,0.4]:
+        print('>%s: %s%%'%(str(i),str(np.sum(p[x>i])*100)[0:5]))
     #plt.ylim([0,1.05*np.max(p)])    
 
 def plot_density_2d(p,x):

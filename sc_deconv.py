@@ -78,42 +78,88 @@ def data_gen_1d(p,x,N_c,N_r,noise='poi',vis=0):
 
 
 ## distribution estimation: density deconvolution
-def dd_1d(Y,noise='poi',verbose=False,gamma=None,resolution=2):   
-    n_degree = 7
-     
+def dd_1d(Y,noise='poi',gamma=None,c_res=2,c_reg=1e-5,n_degree=5,verbose=False,debug_mode=False):   
     
     ## setting parameters 
+    
     if gamma is None:
         gamma = cal_gamma(Y)
-        if verbose: print('gamma:%s'%str(gamma))
+        
+    if verbose: print('n_degree: %s, c_res: %s, c_reg: %s, gamma: %s\n'%(str(n_degree),str(c_res),str(c_reg),str(gamma)))
+        
     
     ## converting the read counts to some sufficient statistics
     Y_pdf_high,Y_supp_high = counts2pdf_1d(Y[Y>=gamma])    
     Y_pdf,Y_supp = counts2pdf_1d(Y[Y<gamma])   
     n_high = np.sum(Y>=gamma)
     n_low  = np.sum(Y<gamma)
-            
-    x       = np.linspace(0,1,max(101,int(1/gamma*resolution)))
+    
+    if debug_mode: 
+        print('### debug: proportion separation ### start ###')
+        plt.figure(figsize=[16,5])
+        plt.subplot(121)
+        plt.plot(Y_supp,Y_pdf*n_low,marker='o')
+        plt.title('low proportion')
+        plt.subplot(122)
+        plt.plot(Y_supp_high,Y_pdf_high*n_high,marker='o')
+        plt.title('high proportion')
+        plt.show()
+        print('### debug: proportion separation ### end ###\n')
+        
+    x       = np.linspace(0,1,max(101,int(1/gamma*c_res)))
     Q       = Q_gen(x,n_degree=n_degree)
     P_model = Pmodel_cal(x,Y_supp,gamma,noise='poi')
     
     ## gradient checking
-    #alpha = np.ones([n_degree])
-    #for i in range(5):
-    #    temp = np.zeros([5])
-    #    temp[i] += 0.000001
-    #    print((l_cal(alpha+temp,Y_pdf,P_model,Q)-l_cal(alpha,Y_pdf,P_model,Q))/0.000001)
-    #    
-    #print(grad_cal(alpha,Y_pdf,P_model,Q)) 
+    if debug_mode: 
+        print('### debug: proportion separation ### start ###')
+        alpha = np.ones([n_degree])
+        print('Numerical gradients')
+        for i in range(n_degree):
+            temp = np.zeros([n_degree])
+            temp[i] += 0.000001
+            print((l_cal(alpha+temp,Y_pdf,P_model,Q,c_reg)-l_cal(alpha,Y_pdf,P_model,Q,c_reg))/0.000001)
+        print('Close-form gradients')    
+        print(grad_cal(alpha,Y_pdf,P_model,Q,c_reg)) 
+        print('### debug: proportion separation ### end ###\n')
+    
     
     ## optimization: using scipy
-    res       = sp.optimize.minimize(f_opt,np.zeros([n_degree]),args=(Y_pdf,P_model,Q),jac=True,options={'disp': False})
+    res       = sp.optimize.minimize(f_opt,np.zeros([n_degree]),args=(Y_pdf,P_model,Q,c_reg),jac=True,options={'disp': False})
     alpha_hat = res.x
-    print('alpha_hat: ', alpha_hat)
-    _         = l_cal(alpha_hat,Y_pdf,P_model,Q,verbose=True)
+    
+    if debug_mode: 
+        print('### debug: optimization ### start ###')
+        print('c_reg',c_reg)
+        _         = l_cal(alpha_hat,Y_pdf,P_model,Q,c_reg,verbose=True)
+        print('### debug: optimization ### end ###\n')
     p_hat     = px_cal(Q,alpha_hat)
     
+    if debug_mode: 
+        print('### debug: dd result before merging ### start ###')
+        print('alpha_hat: ', alpha_hat)
+        print('gamma:%s'%str(gamma))
+        plt.figure(figsize=[16,5])
+        plt.subplot(121)
+        plt.plot(x*gamma,p_hat*n_low,marker='o')
+        plt.title('low proportion')
+        plt.subplot(122)
+        plt.plot(Y_supp_high,Y_pdf_high*n_high,marker='o')
+        plt.title('high proportion')
+        plt.show()
+        print('### debug: dd result before merging ### end ###\n')
+    
     p_hat,x,gamma = p_merge(p_hat,x*gamma,n_low, Y_pdf_high,Y_supp_high,n_high)
+    
+    if debug_mode: 
+        print('### debug: dd result after merging ### start ###')
+        print('gamma:%s'%str(gamma))
+        plt.figure(figsize=[16,5])
+        plt.subplot(121)
+        plt.plot(x*gamma,p_hat*n_low,marker='o')
+        plt.title('merged result')
+        plt.show()
+        print('### debug: dd result after merging ### end ###\n')
     
     ## record useful information
     dd_info = {}
@@ -132,34 +178,32 @@ def dd_1d(Y,noise='poi',verbose=False,gamma=None,resolution=2):
         plt.show() 
     return p_hat,dd_info
 
-def f_opt(alpha,Y_pdf,P_model,Q):
-    return -l_cal(alpha,Y_pdf,P_model,Q),-grad_cal(alpha,Y_pdf,P_model,Q)
+def f_opt(alpha,Y_pdf,P_model,Q,c_reg):
+    return -l_cal(alpha,Y_pdf,P_model,Q,c_reg),-grad_cal(alpha,Y_pdf,P_model,Q,c_reg)
 
 def px_cal(Q,alpha):
     P_X  = np.exp(Q.dot(alpha))
     P_X /= np.sum(P_X)
     return P_X
     
-def l_cal(alpha,Y_pdf,P_model,Q,verbose=False):
+def l_cal(alpha,Y_pdf,P_model,Q,c_reg,verbose=False):
     P_X = px_cal(Q,alpha)
-    #l   = np.sum(Y_pdf*np.log(P_model.dot(P_X)+1e-8))  
-    #print(np.sum(Y_pdf*np.log(P_model.dot(P_X)+1e-8)),0.01*np.sum(alpha**2))
-    l   = np.sum(Y_pdf*np.log(P_model.dot(P_X)+1e-8)) - 1e-4*np.sum(alpha**2)
-    if verbose is True: print('-l:%s, reg:%s'%(str(-np.sum(Y_pdf*np.log(P_model.dot(P_X)+1e-8))),str(1e-4*np.sum(alpha**2))))
+    l   = np.sum(Y_pdf*np.log(P_model.dot(P_X)+1e-10)) - c_reg*np.sum(alpha**2)
+    if verbose is True: print('-l:%s, reg:%s'%(str(-np.sum(Y_pdf*np.log(P_model.dot(P_X)+1e-8))),str(c_reg*np.sum(alpha**2))))
     return l
     
 
-def grad_cal(alpha,Y_pdf,P_model,Q):    
+def grad_cal(alpha,Y_pdf,P_model,Q,c_reg):    
     P_X = px_cal(Q,alpha) # P_X        
     P_Y = P_model.dot(P_X) # P_Y    
-    W = (((P_model.T/(P_Y+1e-8)).T-1)*P_X).T # gradient
+    W = (((P_model.T/(P_Y+1e-10)).T-1)*P_X).T # gradient
     #grad = Q.T.dot(W.dot(Y_pdf))
-    grad = Q.T.dot(W.dot(Y_pdf)) - 1e-4*2*alpha
+    grad = Q.T.dot(W.dot(Y_pdf)) - c_reg*2*alpha
     return grad
     
 def Q_gen(x=None,vis=0,n_degree=5): # generating a natural spline from B-spline basis
     #n_degree=5
-    print('n_degree:%s'%str(n_degree))
+    # print('n_degree:%s'%str(n_degree))
     if x is None: x = np.linspace(0,1,101)
     t = np.linspace(0,1,3+n_degree+1)
     Q = np.zeros([x.shape[0],n_degree],dtype=float)
@@ -181,13 +225,19 @@ def Q_gen(x=None,vis=0,n_degree=5): # generating a natural spline from B-spline 
     return Q
 
 def p_merge(p1,x1,n1,p2,x2,n2):    
+    ## only care about non-zero parts 
+    x_step = x1[1]-x1[0]
+    x1 = x1[p1>0]
+    p1 = p1[p1>0]
+    x2 = x2[p2>0]
+    p2 = p2[p2>0]
+    
     ## combining the pdf
     p1       = p1*n1/(n1+n2)
     p2       = p2*n2/(n1+n2)
     p_all    = np.concatenate([p1,p2])
     x_all    = np.concatenate([x1,x2])
     sort_idx = np.argsort(x_all)
-    
     p = [p_all[sort_idx[0]]]
     x = [x_all[sort_idx[0]]]
     for i in range(1,sort_idx.shape[0]):
@@ -197,15 +247,14 @@ def p_merge(p1,x1,n1,p2,x2,n2):
             p.append(p_all[sort_idx[i]])
             x.append(x_all[sort_idx[i]])
     
-    ## transforming to a new set of support   
-    x_step     = (np.max(x1)-np.min(x1))/(len(x1)-1)
+    ## transforming to a new set of support       
     x_new      = np.linspace(np.min(x),np.max(x),(np.max(x)-np.min(x))/x_step+1)
     cdf        = np.cumsum(p)
     p_new      = np.interp(x_new,x,cdf)
     p_new[1:] -= p_new[0:-1]
     gamma = np.max(x_new) 
     x_new /= gamma
-   
+    
     return p_new,x_new,gamma
     
 #def Q_gen(x=None,vis=0): # generating a natural spline from B-spline basis
@@ -234,7 +283,8 @@ def counts2pdf_1d(Y):
 def cal_gamma(Y): # we use this function to define the data driven gamma for a
     Y_99  = np.percentile(Y,99)
     gamma = int(Y_99+3*np.sqrt(Y_99)) # gamma should be roughly Y_max. The 95% percentile is used for robustness consideration
-    return gamma
+    
+    return min(gamma,100)
 
 def Pmodel_cal(x,Y_supp,N_r,noise='poi'):
     n_supp = x.shape[0]
@@ -256,7 +306,7 @@ def ml_1d(Y): # with no rounding to the nearest neighbour
     N_c          = Y.shape[0]
     N_r          = cal_gamma(Y)
     p_hat        = Y_pdf
-    x            = Y_supp/(N_r+0.0)
+    x            = Y_supp/N_r
     
     # recording the information
     ml_info={}
@@ -282,7 +332,7 @@ def dd_moments_1d(Y,k=2,noise='poi'):
                 for l in range(i+1):
                     temp *= Y_supp[j]-l
                 M_hat[i] += Y_pdf[j] * temp
-            M_hat[i] /= (gamma**(i+1)+0.0)
+            M_hat[i] /= gamma**(i+1)
     if noise == 'bin':
         for i in range(k):
             for j in range(Y_supp.shape[0]):
@@ -294,7 +344,7 @@ def dd_moments_1d(Y,k=2,noise='poi'):
 
 def M_convert(M,N_r1,N_r2):
     M2 = np.zeros(M.shape,dtype=float)
-    r  = N_r1/(N_r2+0.0)
+    r  = N_r1/N_r2
     for i in range(M2.shape[0]):
         M2[i] = M[i]*r**(i+1)
     mean2 = M2[0]
