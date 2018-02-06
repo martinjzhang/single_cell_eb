@@ -89,10 +89,37 @@ def dd_1d(Y,noise='poi',gamma=None,c_res=2,c_reg=1e-5,n_degree=5,verbose=False,d
         
     
     ## converting the read counts to some sufficient statistics
-    Y_pdf_high,Y_supp_high = counts2pdf_1d(Y[Y>=gamma])    
+    Y_pdf_high_old,Y_supp_high_old = counts2pdf_1d(Y[Y>=gamma])    
     Y_pdf,Y_supp = counts2pdf_1d(Y[Y<gamma])   
     n_high = np.sum(Y>=gamma)
     n_low  = np.sum(Y<gamma)
+    
+    ## smoothing the high probability counts 
+    temp_sigma = 20
+    temp = np.linspace(-3*temp_sigma,3*temp_sigma,6*temp_sigma+1)
+    kernel_gaussian = 1/(np.sqrt(2*np.pi*temp_sigma**2))*np.exp(-temp**2/2/temp_sigma**2)
+    kernel_gaussian /= np.sum(kernel_gaussian)
+    plt.figure()
+    plt.plot(temp,kernel_gaussian)
+    plt.show()
+    Y_pdf_high = np.convolve(Y_pdf_high_old, kernel_gaussian, mode='full')[3*temp_sigma:]
+    
+    temp_sum = np.sum(Y_pdf_high)
+    Y_pdf_high[0:70]  = 0 
+    Y_pdf_high = Y_pdf_high/np.sum(Y_pdf_high)*temp_sum
+    
+    
+    print(Y_pdf_high_old.shape, Y_pdf_high.shape)
+
+    Y_supp_high = np.arange(Y_pdf_high.shape[0])
+    
+    plt.figure()
+    plt.plot(Y_supp_high_old,Y_pdf_high_old)
+    plt.plot(Y_supp_high,Y_pdf_high,color='r')
+    plt.show()
+    
+    ## fix things above
+     
     
     if debug_mode: 
         print('### debug: proportion separation ### start ###')
@@ -285,6 +312,7 @@ def cal_gamma(Y): # we use this function to define the data driven gamma for a
     gamma = int(Y_99+3*np.sqrt(Y_99)) # gamma should be roughly Y_max. The 95% percentile is used for robustness consideration
     
     return min(gamma,100)
+    #return min(gamma,120)
 
 def Pmodel_cal(x,Y_supp,N_r,noise='poi'):
     n_supp = x.shape[0]
