@@ -89,35 +89,36 @@ def dd_1d(Y,noise='poi',gamma=None,c_res=2,c_reg=1e-5,n_degree=5,verbose=False,d
         
     
     ## converting the read counts to some sufficient statistics
-    Y_pdf_high_old,Y_supp_high_old = counts2pdf_1d(Y[Y>=gamma])    
+    #Y_pdf_high_old,Y_supp_high_old = counts2pdf_1d(Y[Y>=gamma])    
+    Y_pdf_high,Y_supp_high = counts2pdf_1d(Y[Y>=gamma])    
     Y_pdf,Y_supp = counts2pdf_1d(Y[Y<gamma])   
     n_high = np.sum(Y>=gamma)
     n_low  = np.sum(Y<gamma)
-    
-    ## smoothing the high probability counts 
-    temp_sigma = 20
-    temp = np.linspace(-3*temp_sigma,3*temp_sigma,6*temp_sigma+1)
-    kernel_gaussian = 1/(np.sqrt(2*np.pi*temp_sigma**2))*np.exp(-temp**2/2/temp_sigma**2)
-    kernel_gaussian /= np.sum(kernel_gaussian)
-    plt.figure()
-    plt.plot(temp,kernel_gaussian)
-    plt.show()
-    Y_pdf_high = np.convolve(Y_pdf_high_old, kernel_gaussian, mode='full')[3*temp_sigma:]
-    
-    temp_sum = np.sum(Y_pdf_high)
-    Y_pdf_high[0:70]  = 0 
-    Y_pdf_high = Y_pdf_high/np.sum(Y_pdf_high)*temp_sum
-    
-    
-    print(Y_pdf_high_old.shape, Y_pdf_high.shape)
-
-    Y_supp_high = np.arange(Y_pdf_high.shape[0])
-    
-    plt.figure()
-    plt.plot(Y_supp_high_old,Y_pdf_high_old)
-    plt.plot(Y_supp_high,Y_pdf_high,color='r')
-    plt.show()
-    
+    #
+    ### smoothing the high probability counts 
+    #temp_sigma = 20
+    #temp = np.linspace(-3*temp_sigma,3*temp_sigma,6*temp_sigma+1)
+    #kernel_gaussian = 1/(np.sqrt(2*np.pi*temp_sigma**2))*np.exp(-temp**2/2/temp_sigma**2)
+    #kernel_gaussian /= np.sum(kernel_gaussian)
+    #plt.figure()
+    #plt.plot(temp,kernel_gaussian)
+    #plt.show()
+    #Y_pdf_high = np.convolve(Y_pdf_high_old, kernel_gaussian, mode='full')[3*temp_sigma:]
+    #
+    #temp_sum = np.sum(Y_pdf_high)
+    #Y_pdf_high[0:70]  = 0 
+    #Y_pdf_high = Y_pdf_high/np.sum(Y_pdf_high)*temp_sum
+    #
+    #
+    #print(Y_pdf_high_old.shape, Y_pdf_high.shape)
+#
+    #Y_supp_high = np.arange(Y_pdf_high.shape[0])
+    #
+    #plt.figure()
+    #plt.plot(Y_supp_high_old,Y_pdf_high_old)
+    #plt.plot(Y_supp_high,Y_pdf_high,color='r')
+    #plt.show()
+    #
     ## fix things above
      
     
@@ -253,12 +254,13 @@ def Q_gen(x=None,vis=0,n_degree=5): # generating a natural spline from B-spline 
 
 def p_merge(p1,x1,n1,p2,x2,n2):    
     ## only care about non-zero parts 
+    x_c=x1[-1]
     x_step = x1[1]-x1[0]
     x1 = x1[p1>0]
     p1 = p1[p1>0]
     x2 = x2[p2>0]
-    p2 = p2[p2>0]
-    
+    p2 = p2[p2>0]    
+        
     ## combining the pdf
     p1       = p1*n1/(n1+n2)
     p2       = p2*n2/(n1+n2)
@@ -280,6 +282,24 @@ def p_merge(p1,x1,n1,p2,x2,n2):
     p_new      = np.interp(x_new,x,cdf)
     p_new[1:] -= p_new[0:-1]
     gamma = np.max(x_new) 
+    
+    ## smooth the connection region
+    x_idx = (x_new>(x_c-2*np.sqrt(x_c))) * (x_new<(x_c+2*np.sqrt(x_c)))    
+    for i in range(x_new.shape[0]):
+        if x_new[i]>x_c-2*np.sqrt(x_c):# and x_new[i]<x_c+x_width:
+            temp_alpha = min(1,(x_new[i] - (x_c-2*np.sqrt(x_c)) ) / np.sqrt(x_c))
+            x_width = 2*np.sqrt(x_new[i])    
+            temp_idx = (x_new>(x_new[i]-x_width)) * (x_new<(x_new[i]+x_width))
+            temp_x = x_new[temp_idx]
+            temp_sigma = x_width/3
+            kernel_gaussian = 1/(np.sqrt(2*np.pi*temp_sigma**2))*np.exp(-(temp_x-x_new[i])**2/2/temp_sigma**2)
+            kernel_gaussian /= np.sum(kernel_gaussian)
+            #print(kernel_gaussian)
+            #break
+            
+            temp_p = p_new[i]*temp_alpha
+            p_new[i] *=(1-temp_alpha)
+            p_new[temp_idx] += temp_p*kernel_gaussian
     x_new /= gamma
     
     return p_new,x_new,gamma
