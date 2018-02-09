@@ -6,6 +6,7 @@ import matplotlib.pyplot as plt
 import time
 from util import *
 import seaborn as sns
+from BsplineND import *
 
 ## toy distribution
 def toy_dist(opt='1d',vis=0):
@@ -45,7 +46,7 @@ def toy_dist(opt='1d',vis=0):
         plot_density_1d(p,x)
         plt.xlabel('support')
         plt.ylabel('probablity')
-        plt.title('toy distribution')
+        plt.title('toy distribution, mean: %s'%str(np.sum(p*x)))
         plt.legend()
         plt.show()   
     return p,x
@@ -80,8 +81,7 @@ def data_gen_1d(p,x,N_c,N_r,noise='poi',vis=0):
 ## distribution estimation: density deconvolution
 def dd_1d(Y,noise='poi',gamma=None,c_res=2,c_reg=1e-5,n_degree=5,verbose=False,debug_mode=False):   
     
-    ## setting parameters 
-    
+    ## setting parameters     
     if gamma is None:
         gamma = cal_gamma(Y)
         
@@ -93,34 +93,7 @@ def dd_1d(Y,noise='poi',gamma=None,c_res=2,c_reg=1e-5,n_degree=5,verbose=False,d
     Y_pdf_high,Y_supp_high = counts2pdf_1d(Y[Y>=gamma])    
     Y_pdf,Y_supp = counts2pdf_1d(Y[Y<gamma])   
     n_high = np.sum(Y>=gamma)
-    n_low  = np.sum(Y<gamma)
-    #
-    ### smoothing the high probability counts 
-    #temp_sigma = 20
-    #temp = np.linspace(-3*temp_sigma,3*temp_sigma,6*temp_sigma+1)
-    #kernel_gaussian = 1/(np.sqrt(2*np.pi*temp_sigma**2))*np.exp(-temp**2/2/temp_sigma**2)
-    #kernel_gaussian /= np.sum(kernel_gaussian)
-    #plt.figure()
-    #plt.plot(temp,kernel_gaussian)
-    #plt.show()
-    #Y_pdf_high = np.convolve(Y_pdf_high_old, kernel_gaussian, mode='full')[3*temp_sigma:]
-    #
-    #temp_sum = np.sum(Y_pdf_high)
-    #Y_pdf_high[0:70]  = 0 
-    #Y_pdf_high = Y_pdf_high/np.sum(Y_pdf_high)*temp_sum
-    #
-    #
-    #print(Y_pdf_high_old.shape, Y_pdf_high.shape)
-#
-    #Y_supp_high = np.arange(Y_pdf_high.shape[0])
-    #
-    #plt.figure()
-    #plt.plot(Y_supp_high_old,Y_pdf_high_old)
-    #plt.plot(Y_supp_high,Y_pdf_high,color='r')
-    #plt.show()
-    #
-    ## fix things above
-     
+    n_low  = np.sum(Y<gamma)     
     
     if debug_mode: 
         print('### debug: proportion separation ### start ###')
@@ -135,7 +108,7 @@ def dd_1d(Y,noise='poi',gamma=None,c_res=2,c_reg=1e-5,n_degree=5,verbose=False,d
         print('### debug: proportion separation ### end ###\n')
         
     x       = np.linspace(0,1,max(101,int(1/gamma*c_res)))
-    Q       = Q_gen(x,n_degree=n_degree)
+    Q       = Q_gen_ND(x,n_degree=n_degree)
     P_model = Pmodel_cal(x,Y_supp,gamma,noise='poi')
     
     ## gradient checking
@@ -194,6 +167,7 @@ def dd_1d(Y,noise='poi',gamma=None,c_res=2,c_reg=1e-5,n_degree=5,verbose=False,d
     dd_info['alpha']    = alpha_hat
     dd_info['x']        = x
     dd_info['gamma']    = gamma
+    dd_info['entropy']  = entropy(p_hat,x)
     dd_info['Y_pdf']    = Y_pdf
     dd_info['Y_supp']   = Y_supp
     if verbose:
@@ -240,6 +214,7 @@ def Q_gen(x=None,vis=0,n_degree=5): # generating a natural spline from B-spline 
         c[i]=1
         spl=sp.interpolate.BSpline(t=t,c=c,k=3)
         Q[:,i] = spl(x)
+        
     if vis == 1:
         plt.figure(figsize=[16,5])
         for i in range(n_degree):
@@ -303,23 +278,6 @@ def p_merge(p1,x1,n1,p2,x2,n2):
     x_new /= gamma
     
     return p_new,x_new,gamma
-    
-#def Q_gen(x=None,vis=0): # generating a natural spline from B-spline basis
-#    if x is None: x = np.linspace(0,1,101)
-#    t = np.linspace(0,1,9)
-#    Q = np.zeros([x.shape[0],5],dtype=float)
-#    for i in range(5):
-#        c = np.zeros([5])
-#        c[i]=1
-#        spl=sp.interpolate.BSpline(t=t,c=c,k=3)
-#        Q[:,i] = spl(x)
-#    if vis == 1:
-#        plt.figure()
-#        for i in range(5):
-#            plt.plot(x,Q[:,i],label=str(i+1))
-#        plt.legend()
-#        plt.show()
-#    return Q
 
 def counts2pdf_1d(Y):
     Y_pdf=np.bincount(Y)
@@ -352,16 +310,16 @@ def Pmodel_cal(x,Y_supp,N_r,noise='poi'):
 def ml_1d(Y): # with no rounding to the nearest neighbour
     Y_pdf,Y_supp = counts2pdf_1d(Y)
     N_c          = Y.shape[0]
-    N_r          = cal_gamma(Y)
+    gamma        = cal_gamma(Y)
     p_hat        = Y_pdf
-    x            = Y_supp/N_r
+    x            = Y_supp/gamma
     
     # recording the information
     ml_info={}
     ml_info['Y_pdf']  = Y_pdf
     ml_info['Y_supp'] = Y_supp
     ml_info['x']      = x
-    ml_info['N_r']    = N_r
+    ml_info['gamma']  = gamma
     return p_hat,ml_info
 
 ## moments estimation
@@ -404,7 +362,7 @@ def plot_result_1d(p,p_hat,p_hat_ml,dd_info,ml_info,data_info):
     ## load some important parameters
     x    = data_info['x'] # the true support 
     x_dd = dd_info['x']*dd_info['gamma']/(data_info['N_r']+0.0) # the support assumed by deconv
-    x_ml = ml_info['x']*dd_info['gamma']/(data_info['N_r']+0.0)
+    x_ml = ml_info['x']*ml_info['gamma']/(data_info['N_r']+0.0)
     
     ## ml estimation
     err_dd = dist_W1(p,p_hat,x,x_dd)

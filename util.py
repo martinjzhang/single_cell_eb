@@ -14,6 +14,8 @@ def is_number(s):
     except ValueError:
         return False
 
+def entropy(p,x):
+    return -np.sum(p*np.log(p))   
     
 def pearson_corr(p,x):
     n_supp = x.shape[0]
@@ -38,7 +40,8 @@ def pearson_corr(p,x):
         return cov/np.sqrt(var1*var2)
     else:
         return 0
-    
+
+## fix it: the x axis may not be well aligned
 def mutual_info(p,x):
     n_supp = x.shape[0]
     p1     = {}
@@ -142,10 +145,13 @@ def plot_density_1d(p,x):
         print('>%s: %s%%'%(str(i),str(np.sum(p[x>i])*100)[0:5]))
     #plt.ylim([0,1.05*np.max(p)])    
 
-def plot_density_2d(p,x):
+def plot_density_2d(p,x,header='',range_=None):
     plt.scatter(x[:,0], x[:,1],s=5000*p,alpha=0.8,c=p,cmap='viridis')
     plt.colorbar()
-    plt.title('PC: %s,  MI: %s'%(str(pearson_corr(p,x))[0:6],str(mutual_info(p,x))[0:6]))
+    plt.title(header+'PC: %s,  MI: %s'%(str(pearson_corr(p,x))[0:6],str(mutual_info(p,x))[0:6]))
+    if range_ is not None:
+        plt.xlim(range_)
+        plt.ylim(range_)
     
 def plot_scatter(X,X_label,idx1,idx2):
     #plt.figure()
@@ -173,8 +179,6 @@ def plot_gene(X,gene_name,X_label=None,n_bin=100):
     plot_hist(X,X_label,n_bin=n_bin)
     plt.show()
 
-
-    
 def plot_pair(X,X_label,idx1,idx2):
     plt.figure(figsize=[20,7.5])
     plt.subplot(1,3,1)
