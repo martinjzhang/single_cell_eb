@@ -7,8 +7,12 @@ import time
 from util import *
 import seaborn as sns
 from BsplineND import *
+from multiprocessing import Pool
+import time
 
-## toy distribution
+"""
+    toy distribution
+"""
 def toy_dist(opt='1d',vis=0):
     if opt == '1d_Q':
         alpha = np.array([2.4,2.15,1.2,-0.7 ,-5])
@@ -51,7 +55,9 @@ def toy_dist(opt='1d',vis=0):
         plt.show()   
     return p,x
 
-## data generation
+"""
+    data generation
+"""
 def data_gen_1d(p,x,N_c,N_r,noise='poi',vis=0):
     n_supp = p.shape[0]
     x_samp = np.random.choice(x,N_c, p=p,replace=True)
@@ -164,6 +170,7 @@ def dd_1d(Y,noise='poi',gamma=None,c_res=2,c_reg=1e-5,n_degree=5,verbose=False,d
     
     ## record useful information
     dd_info = {}
+    dd_info['p']        = p_hat
     dd_info['alpha']    = alpha_hat
     dd_info['x']        = x
     dd_info['gamma']    = gamma
@@ -393,3 +400,59 @@ def supp_trans(p,x,x_new):
     p_new      = np.interp(x_new,x,cdf)
     p_new[1:] -= p_new[0:-1]
     return p_new
+
+"""
+    denoising 
+"""
+def denoise_1d(Y,data_info=None,noise='poi',opt='dd',lamb=0.1):
+    ## if p is not given, using density deconvolution to estimate p
+    if data_info is None: _,data_info=dd_1d(Y)
+
+    p     = data_info['p']
+    x     = data_info['x']
+    gamma=data_info['gamma']  if 'gamma' in data_info.keys() else data_info['N_r']
+        
+    ## calculate the Bayes estimate of x for each value of y: E[X|Y=y]
+    x_hat_dic = {}
+    for y in np.unique(Y):
+        temp = 0 
+        py   = 0
+        for i in range(p.shape[0]):
+            temp += x[i]*p[i]*sp.stats.poisson.pmf(y,x[i]*gamma)
+            py   += p[i]*sp.stats.poisson.pmf(y,x[i]*gamma)
+        x_hat_dic[y] = temp/py
+        
+    ## generates the final results
+    Y_hat = np.zeros(Y.shape[0],dtype=float)
+    for i in range(Y_hat.shape[0]):
+        Y_hat[i] = x_hat_dic[Y[i]]*gamma
+    return Y_hat
+
+def denoise_1d_mp(GC,n_job=1,verbose=False,GC_true=None):
+    if verbose: 
+        print('n_gene=%s, n_cell=%s, n_job=%s'%(str(GC.shape[0]),str(GC.shape[1]),str(n_job)))
+        start_time=time.time()
+        print('#time start: 0.0s')
+    
+    Y_input = []
+    for i in range(GC.shape[0]):
+        Y_input.append(GC[i,:])
+        
+    if verbose: print('#time input: %ss'%str(time.time()-start_time)[0:5])
+    
+    ## multi threading
+    pool = Pool(n_job)
+    res  = pool.map(denoise_1d, Y_input)
+    
+    if verbose: print('#time mp: %ss'%str(time.time()-start_time)[0:5])
+    
+    GC_hat = np.zeros(GC.shape)
+    for i in range(GC.shape[0]):
+        GC_hat[i,:] = res[i]
+        
+    if verbose: 
+        print('#time total: %ss'%str(time.time()-start_time)[0:5])        
+        print('MSE: %s \n'%str(np.sum((GC_hat-GC_true)**2)/GC.shape[1]/GC.shape[0]))
+                
+    return GC_hat
+    
