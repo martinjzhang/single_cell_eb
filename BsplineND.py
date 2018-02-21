@@ -44,7 +44,7 @@ class BsplineND():
             values[icoeffs] = np.product(values_dim, axis=0)
         return values
 
-def Q_gen_ND(points=None,n_degree=5,opt='1d',verbose=False):        
+def Q_gen_ND(points=None,n_degree=5,opt='1d',zero_inflate=False,verbose=False):        
     if opt=='1d':
         if points is None: points = np.linspace(0,1,101)
         knotsx = np.arange(n_degree)/(n_degree-1)
@@ -52,13 +52,21 @@ def Q_gen_ND(points=None,n_degree=5,opt='1d',verbose=False):
         values1d = bspline1d.evaluate(points[None, :])
         Q = (values1d[np.linalg.norm(values1d,axis=1)>1e-6,:]).T
         
+        if zero_inflate:
+            Q_t        = np.zeros([Q.shape[0],Q.shape[1]+1],dtype=float)
+            Q_t[:,0]   = 1
+            #Q_t[:,0]  = np.exp(-100*points)
+            Q_t[:,1:] = Q
+            Q = Q_t
+            n_degree += 1
+        
         if verbose:
             plt.figure(figsize=[16,5])
             for i in range(Q.shape[1]):
                 plt.plot(points,Q[:,i],label=str(i+1))
             plt.legend()
             plt.show()        
-        return Q
+        return Q,n_degree
     
     elif opt=='2d':
         if points is None: 
@@ -82,4 +90,4 @@ def Q_gen_ND(points=None,n_degree=5,opt='1d',verbose=False):
                     plt.imshow(Q[:,temp-1].reshape(npt, npt).T)
             plt.suptitle('2D Bspline basis from scipy (non-periodic)')
             plt.show()
-        return Q    
+        return Q,n_degree    

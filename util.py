@@ -15,6 +15,7 @@ def is_number(s):
         return False
 
 def entropy(p,x):
+    p = p[p>0]
     return -np.sum(p*np.log(p))   
     
 def pearson_corr(p,x):
@@ -66,13 +67,17 @@ def mutual_info(p,x):
             
     return mi
 
-def moments(p,x):
-    M1 = 0
-    M2 = 0
-    for i in range(x.shape[0]):
-        M1 += p[i]*x[i]
-        M2 += p[i]*x[i]**2
-    return M1, M2
+def moments(p,x,k=2):
+    M = np.zeros([k],dtype=float)
+    for i in range(k):
+        M[i] = p.dot(x**(i+1))
+    return M
+
+def moments_Y(Y,k=2):
+    M = np.zeros([k],dtype=float)
+    for i in range(k):
+        M[i] = np.mean(Y**(i+1))
+    return M
 
 def info_2d(p,x):
     return pearson_corr(p,x),mutual_info(p,x)

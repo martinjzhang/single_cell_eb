@@ -13,22 +13,23 @@ import time
 """
     toy distribution
 """
-def toy_dist(opt='1d',vis=0):
+def toy_dist(opt='1d',verbose=False,Y=None):
+    np.random.seed(42)
     if opt == '1d_Q':
         alpha = np.array([2.4,2.15,1.2,-0.7 ,-5])
         x     = np.linspace(0,1,101)
-        Q     = Q_gen()
+        Q,_   = Q_gen()
         p     = np.exp(Q.dot(alpha))
         p    /= np.sum(p)
-        if vis ==1:
+        if verbose:
             print(alpha)
     elif opt == '1d_CD3E':
         alpha = np.array([2.29,4.04,3.6,-2.05 ,-7.89])
         x     = np.linspace(0,1,101)
-        Q     = Q_gen()
+        Q,_   = Q_gen()
         p     = np.exp(Q.dot(alpha))
         p    /= np.sum(p)
-        if vis ==1:
+        if verbose:
             print(alpha)
     elif opt == '1d_FTL':
         alpha = np.array([ 0.87521866, -0.43979061, -0.33585905,  2.21903186, -0.81100455, -1.62846978, -1.23172219])
@@ -36,16 +37,24 @@ def toy_dist(opt='1d',vis=0):
         Q     = Q_gen(n_degree=7)
         p     = np.exp(Q.dot(alpha))
         p    /= np.sum(p)
-        if vis ==1:
+        if verbose:
             print(alpha)
             
     elif opt == '1d': 
         p = np.array([0,0.2,0.3,0.4,0.1,0,0,0,0,0])
         x = np.array([0,0.05,0.15,0.25,0.35,0.4,0.5,0.6,0.7,1.0])
+        
+    elif opt == 'export':
+        p,x = counts2pdf_1d(Y)
+        x   = x/np.percentile(Y,90)*0.75
+        p   = p[x<1]
+        x   = x[x<1]
+        p   = p/p.sum()
+        
     else: 
         print('Err: option not recognized!')
         
-    if vis == 1:
+    if verbose:
         plt.figure()
         plot_density_1d(p,x)
         plt.xlabel('support')
@@ -58,7 +67,7 @@ def toy_dist(opt='1d',vis=0):
 """
     data generation
 """
-def data_gen_1d(p,x,N_c,N_r,noise='poi',vis=0):
+def data_gen_1d(p,x,N_c,N_r,noise='poi',verbose=False):
     n_supp = p.shape[0]
     x_samp = np.random.choice(x,N_c, p=p,replace=True)
     if noise == 'poi':
@@ -73,19 +82,20 @@ def data_gen_1d(p,x,N_c,N_r,noise='poi',vis=0):
     data_info['N_r']   = N_r
     data_info['noise'] = noise
     
-    if vis==1:
-        plt.figure(figsize=[12,5])
+    if verbose:
+        plt.figure(figsize=[16,5])
         plt.subplot(121)
         plt.hist(x_samp,bins=10)
         plt.subplot(122)
         #plt.hist(Y,bins=np.arange(15)-0.5)
+        plt.title('mean_count=%0.2f'%Y.mean())
         sns.distplot(Y)
         plt.show()
     return x_samp,Y,data_info
 
 
 ## distribution estimation: density deconvolution
-def dd_1d(Y,noise='poi',gamma=None,c_res=2,c_reg=1e-5,n_degree=5,verbose=False,debug_mode=False):   
+def dd_1d(Y,noise='poi',gamma=None,c_res=2,c_reg=1e-5,n_degree=5,zero_inflate=False,verbose=False,debug_mode=False):   
     
     ## setting parameters     
     if gamma is None:
@@ -95,11 +105,21 @@ def dd_1d(Y,noise='poi',gamma=None,c_res=2,c_reg=1e-5,n_degree=5,verbose=False,d
         
     
     ## converting the read counts to some sufficient statistics
-    #Y_pdf_high_old,Y_supp_high_old = counts2pdf_1d(Y[Y>=gamma])    
-    Y_pdf_high,Y_supp_high = counts2pdf_1d(Y[Y>=gamma])    
-    Y_pdf,Y_supp = counts2pdf_1d(Y[Y<gamma])   
-    n_high = np.sum(Y>=gamma)
-    n_low  = np.sum(Y<gamma)     
+    #Y_high,n_high = Y[Y>1000],np.sum(Y>1000)
+    #Y_low,n_low   = Y[Y<=1000],np.sum(Y<=1000)
+    #Y_pdf_high,Y_supp_high = counts2pdf_1d(Y_high)    
+    #Y_pdf,Y_supp = counts2pdf_1d(Y_low)   
+    
+    gamma_ = 20*(gamma<20)+int(gamma+np.sqrt(gamma))*(gamma>=20)
+    Y_pdf_high,Y_supp_high = counts2pdf_1d(Y[Y>gamma_])    
+    Y_pdf,Y_supp = counts2pdf_1d(Y[Y<=gamma_])   
+    n_high = np.sum(Y>gamma_)
+    n_low  = np.sum(Y<=gamma_)   
+    
+    #Y_pdf_high,Y_supp_high = counts2pdf_1d(Y[Y>100])    
+    #Y_pdf,Y_supp = counts2pdf_1d(Y)   
+    #n_high = np.sum(Y>100)
+    #n_low  = np.sum(Y<100) 
     
     if debug_mode: 
         print('### debug: proportion separation ### start ###')
@@ -113,8 +133,9 @@ def dd_1d(Y,noise='poi',gamma=None,c_res=2,c_reg=1e-5,n_degree=5,verbose=False,d
         plt.show()
         print('### debug: proportion separation ### end ###\n')
         
-    x       = np.linspace(0,1,max(101,int(1/gamma*c_res)))
-    Q       = Q_gen_ND(x,n_degree=n_degree)
+    x          = np.linspace(0,1,max(101,int(1/gamma*c_res)))
+    Q,n_degree = Q_gen_ND(x,n_degree=n_degree,zero_inflate=zero_inflate)
+        
     P_model = Pmodel_cal(x,Y_supp,gamma,noise='poi')
     
     ## gradient checking
@@ -210,7 +231,7 @@ def grad_cal(alpha,Y_pdf,P_model,Q,c_reg):
     grad = Q.T.dot(W.dot(Y_pdf)) - c_reg*2*alpha
     return grad
     
-def Q_gen(x=None,vis=0,n_degree=5): # generating a natural spline from B-spline basis
+def Q_gen(x=None,vis=0,n_degree=5,zero_inflate=False): # generating a natural spline from B-spline basis
     #n_degree=5
     # print('n_degree:%s'%str(n_degree))
     if x is None: x = np.linspace(0,1,101)
@@ -221,7 +242,12 @@ def Q_gen(x=None,vis=0,n_degree=5): # generating a natural spline from B-spline 
         c[i]=1
         spl=sp.interpolate.BSpline(t=t,c=c,k=3)
         Q[:,i] = spl(x)
-        
+    if zero_inflate:
+        Q_t        = np.zeros([Q.shape+1])
+        Q_t[0,0]   = 1
+        Q_t[1:,1:] = Q
+        Q = Q_t
+        n_degree += 1
     if vis == 1:
         plt.figure(figsize=[16,5])
         for i in range(n_degree):
@@ -232,7 +258,7 @@ def Q_gen(x=None,vis=0,n_degree=5): # generating a natural spline from B-spline 
             plt.ylim([-2,2])
         plt.legend()
         plt.show()
-    return Q
+    return Q,n_degree
 
 def p_merge(p1,x1,n1,p2,x2,n2):    
     ## only care about non-zero parts 
@@ -292,11 +318,28 @@ def counts2pdf_1d(Y):
     Y_supp=np.arange(Y_pdf.shape[0])
     return Y_pdf,Y_supp
 
-def cal_gamma(Y): # we use this function to define the data driven gamma for a
-    Y_99  = np.percentile(Y,99)
-    gamma = int(Y_99+3*np.sqrt(Y_99)) # gamma should be roughly Y_max. The 95% percentile is used for robustness consideration
+def cal_gamma(Y): # we use this function to define the data driven gamma 
+    if Y.max() < 50:
+        return int(Y.max()+np.sqrt(Y.max()))
     
-    return min(gamma,100)
+    Y_ct  = np.bincount(Y)
+    Y_ct  = np.append(Y_ct,[0])
+    Y_99  = np.percentile(Y,90)
+    temp  = np.arange(Y_ct.shape[0])
+    gamma = np.where((Y_ct<5)&(temp>Y_99))[0][0]
+    #print(Y_99)
+    #print(np.where(Y_ct<10))
+    return min(gamma,150)
+    
+    
+    
+    #Y_ct  = np.bincount(Y)
+    #gamma = np.where(Y_ct<5)[0]
+    #
+    #Y_99  = np.percentile(Y,99)
+    #gamma = int(Y_99+3*np.sqrt(Y_99)) # gamma should be roughly Y_max. The 95% percentile is used for robustness consideration
+    #
+    #return min(gamma,100)
     #return min(gamma,120)
 
 def Pmodel_cal(x,Y_supp,N_r,noise='poi'):
@@ -365,7 +408,7 @@ def M_convert(M,N_r1,N_r2):
     return mean2,var2,M2
 
 ## visualization of the distribution estimation result
-def plot_result_1d(p,p_hat,p_hat_ml,dd_info,ml_info,data_info):
+def plot_result_1d(p,p_hat,p_hat_ml,dd_info,ml_info,data_info,verbose=False):
     ## load some important parameters
     x    = data_info['x'] # the true support 
     x_dd = dd_info['x']*dd_info['gamma']/(data_info['N_r']+0.0) # the support assumed by deconv
@@ -375,21 +418,22 @@ def plot_result_1d(p,p_hat,p_hat_ml,dd_info,ml_info,data_info):
     err_dd = dist_W1(p,p_hat,x,x_dd)
     err_ml = dist_W1(p,p_hat_ml,x,x_ml)
     
-    if len(dd_info['Y_supp'].shape)==1:
+    if len(dd_info['Y_supp'].shape)==1 and verbose:
         # first figure: the confidence interval
         P_model = Pmodel_cal(x,dd_info['Y_supp'],data_info['N_r'],noise=data_info['noise'])
         x_s = np.linspace(0,1,101)
         plt.figure(figsize=[18,5])
         plt.subplot(121)
-        plt.plot(x_s,supp_trans(p_hat_ml,x_ml,x_s),linewidth=4,label='ml: %s'%str(err_ml)[0:6],alpha=0.6)
-        plt.plot(x_s,supp_trans(p_hat,x_dd,x_s),linewidth=4,label='deconv: %s'%str(err_dd)[0:6],alpha=0.6)
-        plt.plot(x_s,supp_trans(p,x,x_s),linewidth=4,label='true distribution',alpha=0.6)
+        plt.plot(x_s,supp_trans(p_hat_ml,x_ml,x_s),linewidth=4,label='ml: %s'%str(err_ml)[0:6],alpha=0.6,color='royalblue')
+        plt.plot(x_s,supp_trans(p_hat,x_dd,x_s),linewidth=4,label='dd: %s'%str(err_dd)[0:6],alpha=0.6,color='darkorange')
+        plt.plot(x_s,supp_trans(p,x,x_s),linewidth=4,label='true distribution',alpha=0.6,color='seagreen')
+        plt.ylim([0,1.2*supp_trans(p,x,x_s).max()])
         plt.legend()
         plt.title('pdf')
         plt.subplot(122)
-        plt.plot(x_ml,np.cumsum(p_hat_ml),marker='o',label='ml: %s'%str(err_ml)[0:6],alpha=0.6)
-        plt.plot(x_dd,np.cumsum(p_hat),marker='o',label='deconv: %s'%str(err_dd)[0:6],alpha=0.6)
-        plt.plot(x,np.cumsum(p),marker='o',label='true distribution',alpha=0.6)
+        plt.plot(x_ml,np.cumsum(p_hat_ml),marker='o',label='ml: %s'%str(err_ml)[0:6],alpha=0.6,color='royalblue')
+        plt.plot(x_dd,np.cumsum(p_hat),marker='o',label='dd: %s'%str(err_dd)[0:6],alpha=0.6,color='darkorange')
+        plt.plot(x,np.cumsum(p),marker='o',label='true distribution',alpha=0.6,color='seagreen')
         plt.title('cdf')
         plt.legend()
         plt.show()
