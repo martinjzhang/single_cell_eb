@@ -25,6 +25,9 @@ def main():
     cov_true = np.cov(X.T)
     logger.info('## True covariance matrix')
     logger.info(str(cov_true))
+    PC_true = np.corrcoef(X.T)
+    logger.info('## True Pearson correlation')
+    logger.info(str(PC_true))
 
     ## estimation 
     
