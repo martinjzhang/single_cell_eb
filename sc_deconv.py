@@ -46,7 +46,7 @@ def toy_dist(opt='1d',verbose=False,Y=None):
         
     elif opt == 'export':
         p,x = counts2pdf_1d(Y)
-        x   = x/np.percentile(Y,90)*0.75
+        x   = x/np.percentile(Y,99)*0.75
         p   = p[x<1]
         x   = x[x<1]
         p   = p/p.sum()
@@ -373,12 +373,18 @@ def ml_1d(Y): # with no rounding to the nearest neighbour
     return p_hat,ml_info
 
 ## moments estimation
-def dd_moments_1d(Y,k=2,noise='poi'):
+def dd_moments_1d(Y,k=2,noise='poi',gamma=None,size_factor=None):
+    ## cell specific normalization factor 
+    if size_factor is None: 
+        size_factor = 1
+    else:
+        size_factor = size_factor.clip(min=0.1)
+    
     ## converting the read counts to some sufficient statistics
-    Y_pdf,Y_supp = counts2pdf_1d(Y)
+    Y_pdf,Y_supp = counts2pdf_1d(np.array(Y/size_factor,dtype=int))
     ## parameter setting   
     N_c    = Y.shape[0]
-    gamma  = cal_gamma(Y)
+    if gamma is None: gamma = cal_gamma(Y)
     
     M_hat = np.zeros(k)   
     if noise == 'poi':
@@ -499,4 +505,120 @@ def denoise_1d_mp(GC,n_job=1,verbose=False,GC_true=None):
         print('MSE: %s \n'%str(np.sum((GC_hat-GC_true)**2)/GC.shape[1]/GC.shape[0]))
                 
     return GC_hat
+
+
+def moment_1d(Y_input):
+    data,k,n_sub = Y_input
+    M = np.zeros([data.shape[1],k],dtype=float)
+    M_ml = np.zeros([data.shape[1],k],dtype=float)
+    gene_list = []
+    for i_gene,gene in enumerate(data.var_names):
+        if data.shape[1]==1:
+            Y = np.array(data.X,dtype=int)
+        else:
+            Y = np.array(data[:,gene].X,dtype=int)
+        if n_sub is not None: Y=sub_sample(Y,int(n_sub*Y.sum()))
+        gene_list.append(gene)
+        _,_,M[i_gene,:],_ = dd_moments_1d(Y,gamma=1)    
+        for i in range(k):
+            M_ml[i_gene,i] = np.mean(Y**(i+1))
+        
+    return M,M_ml,gene_list
     
+def moment_1d_mp(data,n_job=1,k=2,n_sub=None,verbose=False,GC_true=None):
+    
+
+    n_gene,n_cell = data.shape[1],data.shape[0]
+    if verbose: 
+        print('n_gene=%s, n_cell=%s, n_job=%s'%(str(n_gene),str(n_cell),str(n_job)))
+        start_time=time.time()
+        print('#time start: 0.0s')
+    
+    subdata_size = int(n_gene/n_job/3)
+    gene_list = list(data.var_names)
+    subgene_list = []
+    i=0
+    while 1:
+        if i+subdata_size<len(gene_list):
+            subgene_list.append(gene_list[i:i+subdata_size])
+            i = i+subdata_size
+        else:
+            subgene_list.append(gene_list[i:])
+            break
+    
+    Y_input = []
+    for subgene in subgene_list:
+        Y_input.append([data[:,subgene],k,n_sub])    
+    if verbose: print('#time input: %0.4fs'%(time.time()-start_time))
+        
+    ## multi threading
+    pool = Pool(n_job)
+    res  = pool.map(moment_1d, Y_input)
+    
+    if verbose: print('#time mp: %0.4fs'%(time.time()-start_time))
+        
+    M = np.zeros([n_gene,k],dtype=float)
+    M_ml = np.zeros([n_gene,k],dtype=float)
+    gene_list = []
+    iloc = 0
+    for i in range(len(res)):
+        subM,subM_ml,subgene = res[i]
+        gene_list = gene_list + subgene
+        if iloc+subM.shape[0]<n_gene:
+            M[iloc:iloc+subM.shape[0],:] = subM
+            M_ml[iloc:iloc+subM.shape[0],:] = subM_ml
+            iloc = iloc+subM.shape[0]
+        else:
+            M[iloc:,:] = subM
+            M_ml[iloc:,:] = subM_ml
+    if verbose: 
+        print('#time total: %0.4fs'%(time.time()-start_time))        
+                
+    return M,M_ml,gene_list
+
+def dd_moment_anndata(data,k=2,verbose=False,size_norm=True):
+    if verbose: 
+        start_time=time.time()
+        print('#time start: 0.0s')
+    n_cell,n_gene = data.shape
+    X = data.X    
+    gene_name = list(data.var_names)
+    M,M_ml = np.zeros([n_gene,k],dtype=float),np.zeros([n_gene,k],dtype=float)
+    
+    ## size factor
+    if size_norm is True:
+        Nrc = X.sum(axis=1)
+        Nr = Nrc.mean()
+        rsf = Nrc/Nr
+    else:
+        rsf = np.ones([n_cell],dtype=float)
+    rrsf = 1/rsf.clip(min=0.1)
+    rrsf = np.array(rrsf,dtype=float)
+    
+        
+    ## moment calculation
+    #for i in range(k):
+    #    M_ml[:,i] = (X.power(i+1)).mean(axis=0)
+       
+    ## some hacky implementation
+    for i in range(k):
+        temp_X = X.power(i+1)
+        for i_row in range(n_cell):
+            temp = np.squeeze(np.array(temp_X[i_row,:].todense()))
+            temp = temp*rrsf[i_row]**(i+1)             
+            M_ml[:,i] = M_ml[:,i]+temp
+        M_ml[:,i] = M_ml[:,i]/np.sum(rrsf**(i+1))
+    
+    for i in range(k):
+        coef_ = np.poly1d(np.arange(i+1),True).coef
+        for j in range(coef_.shape[0]):
+            M[:,i] = M[:,i] + coef_[j]*M_ml[:,i-j]  
+    
+    #if verbose: print('Nr=%d'%Nr)
+    #for i in range(k):
+    #    M[:,i] = M[:,i]/Nr**(i+1)
+    #    M_ml[:,i] = M_ml[:,i]/Nr**(i+1)
+    
+    if verbose: 
+        print('#time total: %0.4fs'%(time.time()-start_time)) 
+    return M,M_ml,gene_name

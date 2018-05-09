@@ -6,7 +6,43 @@ import scipy.sparse as sp_sparse
 import matplotlib.pyplot as plt
 import h5py
 
+'''
+    calculating the size factor (not scalable so far ...) 
+'''
+def size_factor(X,verbose=False):
+    sf = X.mean(axis=1)/X.mean()
+    sf = np.array(sf).flatten()
+    if verbose:
+        plt.figure(figsize=[12,5])
+        plt.hist(sf,bins=100)
+        plt.show()
+    return sf
+
+def sub_sample(Y,n_sub):
+    n_cell = Y.shape[0]
+    sample = np.zeros(int(np.sum(Y)),dtype=int)
+    loc = 0
+    for i in range(n_cell):
+        sample[loc:loc+Y[i]] = i
+        loc += Y[i]
+    sample = sample[np.random.permutation(sample.shape[0])[0:n_sub]]
+    Y[:] = 0
+    for i in sample:
+        Y[i] += 1
+    return Y
+
 ## some ancillary functions
+"""
+    calculate the dimension-wise rank statistics
+"""
+def rank(x,opt='ascent'):
+    ranks = np.empty_like(x)
+    temp = x.argsort(axis=0)
+    ranks[temp] = np.arange(x.shape[0])
+    if opt=='descent':
+        ranks=x.shape[0]-1-ranks
+    return ranks
+
 def is_number(s):
     try:
         float(s)
