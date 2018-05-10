@@ -1,0 +1,57 @@
+unit_test_cov:: ## True mean
+unit_test_cov:: [0.30666767 0.19045767 0.50287467]
+unit_test_cov:: ## True covariance matrix
+unit_test_cov:: [ 0.07209579 -0.03133157 -0.04076422]
+unit_test_cov:: [-0.03133157  0.06061161 -0.02928004]
+unit_test_cov:: [-0.04076422 -0.02928004  0.07004426]
+unit_test_cov:: ## True Pearson correlation
+unit_test_cov:: [ 1.         -0.47396827 -0.57363801]
+unit_test_cov:: [-0.47396827  1.         -0.44937354]
+unit_test_cov:: [-0.57363801 -0.44937354  1.        ]
+unit_test_cov:: 
+
+unit_test_cov:: ######## unit test: dd_covariance ########
+unit_test_cov:: ## dd mean 
+unit_test_cov:: [0.30591854 0.19047381 0.50290346]
+unit_test_cov:: 
+unit_test_cov:: ## dd covariance matrix
+unit_test_cov:: [ 0.07150346 -0.03139647 -0.04090058]
+unit_test_cov:: [-0.03139647  0.06068453 -0.0291483 ]
+unit_test_cov:: [-0.04090058 -0.0291483   0.06974333]
+unit_test_cov:: 
+unit_test_cov:: ## dd Pearson correlation
+unit_test_cov:: [ 1.         -0.47662659 -0.57918138]
+unit_test_cov:: [-0.47662659  1.         -0.4480463 ]
+unit_test_cov:: [-0.57918138 -0.4480463   1.        ]
+unit_test_cov:: 
+unit_test_cov:: ## total time: 0.03s
+
+unit_test_cov:: ######## unit test: ml_covariance ########
+unit_test_cov:: ## ml mean 
+unit_test_cov:: [[0.30586677 0.19040551 0.50291201]]
+unit_test_cov:: 
+unit_test_cov:: ## ml covariance matrix
+unit_test_cov:: [[ 0.08695967 -0.03137573 -0.04073768]]
+unit_test_cov:: [[-0.03137573  0.07022142 -0.02916947]]
+unit_test_cov:: [[-0.04073768 -0.02916947  0.09514157]]
+unit_test_cov:: 
+unit_test_cov:: ## ml Pearson correlation
+unit_test_cov:: [[ 1.         -0.40151344 -0.44787019]]
+unit_test_cov:: [[-0.40151344  1.         -0.35686877]]
+unit_test_cov:: [[-0.44787019 -0.35686877  1.        ]]
+unit_test_cov:: 
+unit_test_cov:: ## total time: 0.60s
+
+unit_test_cov:: ######## unit test: ml brute force (comparison) ########
+unit_test_cov:: ## ml_bf mean 
+unit_test_cov:: [[0.30586677 0.19040551 0.50291201]]
+unit_test_cov:: 
+unit_test_cov:: ## ml_bf covariance matrix
+unit_test_cov:: [ 0.08696054 -0.03137604 -0.04073808]
+unit_test_cov:: [-0.03137604  0.07022212 -0.02916976]
+unit_test_cov:: [-0.04073808 -0.02916976  0.09514252]
+unit_test_cov:: 
+unit_test_cov:: ## ml_bf Pearson correlation
+unit_test_cov:: [ 1.         -0.40151344 -0.44787019]
+unit_test_cov:: [-0.40151344  1.         -0.35686877]
+unit_test_cov:: [-0.44787019 -0.35686877  1.        ]

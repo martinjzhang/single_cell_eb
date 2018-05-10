@@ -13,7 +13,7 @@ import scanpy.api as sc
 
 # fixit: incorporate dependency on the data 
 def load_toy_ann_data(verbose=False):
-    Nc = 10000
+    Nc = 100000
     Nr = 20
     G = 3
     
@@ -24,8 +24,9 @@ def load_toy_ann_data(verbose=False):
     X = np.zeros([Nc,G],dtype=float)
     temp = np.random.choice(np.arange(x.shape[0]),Nc, p=p,replace=True)  
     X[:,0:2] = x[temp]
-    X[:,-1] = 1
+    X[:,-1] = 0.1
     X = (X.T/np.sum(X,axis=1)).T    # normalize to be a probability distribution    
+    X = X
     
     ## True zero matrix
     p0_true = np.zeros([G,G],dtype=float)
@@ -35,7 +36,7 @@ def load_toy_ann_data(verbose=False):
     p0_true[1,0] = 0.2
 
     ## sample the size factor
-    size_factor = np.random.randn(Nc)*0.2 + 1 
+    size_factor = np.random.randn(Nc)*0.1 + 1 
     
     ## generating the reads 
     Y = np.random.poisson((X.T*size_factor).T*Nr)

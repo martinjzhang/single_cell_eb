@@ -1,10 +1,8 @@
 """ 
+    scdd: "Single Cell Density Deconvolution"
     a self-contained module for moment estimation only
     some nice figure generation functions are included
-    the data are assumed to be stored with an anndata format
-    
-    scdd refers to "Single Cell Density Deconvolution"
-    
+    the data are assumed to be stored with an anndata format    
 """
 
 import numpy as np
@@ -22,32 +20,24 @@ from multiprocessing import Pool
 import time
 from sklearn.linear_model import LinearRegression
 import scanpy.api as sc
-from collections import defaultdict
-from collections import Counter
+import logging
 
 """ 
     calculate the size factor
 """
-def sf(data,verbose=True):
+def dd_size_factor(data,verbose=True):
     X=data.X
-    Nrc = X.sum(axis=1)
+    Nrc = np.array(X.sum(axis=1))
     Nr = Nrc.mean()
-    
-    gamma_c = np.array(Nrc/Nr,dtype=float) 
+    size_factor = Nrc/Nr
     
     if verbose: 
         print('Nr=%d'%Nr)
-        print('gamma_c',np.percentile(gamma_c,[0,0.01,0.1,99,99.9,100]))
+        print('size factor',np.percentile(size_factor,[0,0.01,0.1,99,99.9,100]))
         plt.figure(figsize=[12,5])
-        plt.hist(gamma_c,bins=20)
+        plt.hist(size_factor,bins=20)
         plt.show()
-    return gamma_c
-
-""" 
-    calculate the size factor using moment method (maybe not so important since the poisson rate is large anyway)
-"""
-def sf_m(data,verbose=True):
-    pass
+    return size_factor
 
 """
     the subsample function for anndata input
@@ -168,133 +158,102 @@ def dd_moment_anndata(data,k=2,gamma_c=None,verbose=True):
     return M,M_ml,gene_name
 
 """ 
-    calculate the PC (Pearson correlation) using ml and dd
+    Calculate the covariance matrix as well as the 
+    PC (Pearson correlation) using ml and dd
 """
-def dd_PC_anndata(data,gamma_c=None,verbose=True):
-    k=2
+def dd_covariance(data,size_factor=None,verbose=True):
     if verbose: 
         start_time=time.time()
         print('#time start: 0.0s')
     Nc,G = data.shape
+    Nr = data.X.sum()/Nc
     if verbose: 
-        print('n_cell=%d, n_gene=%d'%(Nc,G))
+        print('n_cell=%d, n_gene=%d, Nr=%0.1f'%(Nc,G,Nr))
     
     X = data.X ## csr file
     gene_name = list(data.var_names)
-    M = np.zeros([G,k],dtype=float)
-    M_ml = np.zeros([G,k],dtype=float)
     
-    if gamma_c is None: gamma_c=np.ones([Nc],dtype=float)
-        
-    ## moment calculation
-    for i in range(k):
-        M_ml[:,i] = (X.power(i+1)).mean(axis=0)
-        
-    M11_ml = np.array((X.transpose().dot(X)/Nc).todense())
+    if size_factor is None: 
+        size_factor=np.ones([Nc],dtype=float)
+          
+    ## empirical moment estimation
+    M1_empi = np.array(X.mean(axis=0)).reshape(-1)
+    M2_empi = np.array((X.transpose().dot(X)/Nc).todense())   
     
-    for i in range(k):
-        coef_ = np.poly1d(np.arange(i+1),True).coef
-        for j in range(coef_.shape[0]):
-            M[:,i] = M[:,i] + coef_[j]*M_ml[:,i-j]  
-            
+    ## dd estimation with size factor correction 
+    mean_dd = (M1_empi/np.mean(size_factor))
+    M2_dd = (M2_empi - np.diag(mean_dd))/np.mean(size_factor**2)    
+    
+    ## Covariance matrix 
+    temp = mean_dd.reshape([G,1])
+    cov_dd = M2_dd - temp.dot(temp.T)
+    
+    ## Pearson correlation
+    std_dd = np.diag(cov_dd).clip(min=0)
+    std_dd = np.sqrt(std_dd)    
+    std_dd = std_dd.reshape([G,1])
+    PC_dd = cov_dd/(std_dd.dot(std_dd.T))
+    PC_dd = PC_dd.clip(min=-1,max=1)
+    
+    ## normalize by Nr:
+    mean_dd /= Nr
+    cov_dd /= Nr**2
     
     if verbose: 
-        fig_var_mean(M_ml,title='ml log10_var vs log10_mean, before size factor')
-    
-    # adjustion by size factor 
-    for i in range(k):   
-        gamma_k = (gamma_c**(i+1)).mean()       
-        M[:,i] = M[:,i]/gamma_k
-        M_ml[:,i] = M_ml[:,i]/gamma_k    
-        
-        if k==2:
-            M11_ml = M11_ml/gamma_k
-        if verbose: 
-            print('M%d, sf=%0.4f'%(i+1,gamma_k))
-      
-    # calculating the PC   
-    temp_mu = M_ml[:,0].reshape(G,1)
-    temp_sig = np.sqrt((M[:,1]-M[:,0]**2).clip(min=1e-12,max=1e6)).reshape(G,1)
-    temp_sig_ml = np.sqrt((M_ml[:,1]-M_ml[:,0]**2).clip(min=1e-12)).reshape(G,1)
-    PC = (M11_ml-temp_mu.dot(temp_mu.T))/(temp_sig.dot(temp_sig.T))
-    PC_ml = (M11_ml-temp_mu.dot(temp_mu.T))/(temp_sig_ml.dot(temp_sig_ml.T))
-    
-    PC = PC.clip(max=1,min=-1)
-    PC_ml = PC_ml.clip(max=1,min=-1)    
-    if verbose: 
-        print('#time total: %0.4fs\n'%(time.time()-start_time)) 
-        
-        fig_var_mean(M_ml,title='ml log10_var vs log10_mean, after size factor')
-        
-        fig_var_mean(M,title='dd log10_var vs log10_mean, after size factor')
-        
-        fig_M2M1sqr(M,title='dd log10_M2 vs log10_mean^2, after size factor')
+        print('#total: %0.2fs'%(time.time()-start_time))
+    return mean_dd,cov_dd,PC_dd
 
-    return PC,PC_ml,gene_name
+def normalize_by_size_factor(X,size_factor): 
+    A = X.data
+    IA = X.indptr  
+    JA = X.indices
+    A_ = np.array(A,dtype=np.float64)
+    for i in range(IA.shape[0]-1):
+        A_[IA[i]:IA[i+1]] /= size_factor[i]           
+    X = sp.sparse.csr_matrix((A_,JA,IA))
+    return X
 
-"""
-
-"""
-def dd_PC_anndata(data,gamma_c=None,verbose=True):
-    k=2
+def ml_covariance(data,size_factor=None,verbose=True):
     if verbose: 
         start_time=time.time()
         print('#time start: 0.0s')
     Nc,G = data.shape
+    Nr = data.X.sum()/Nc    
     if verbose: 
-        print('n_cell=%d, n_gene=%d'%(Nc,G))
+        print('n_cell=%d, n_gene=%d, Nr=%0.1f'%(Nc,G,Nr))
     
     X = data.X ## csr file
     gene_name = list(data.var_names)
-    M,M_ml = np.zeros([G,k],dtype=float),np.zeros([G,k],dtype=float)
     
-    if gamma_c is None: gamma_c=np.ones([Nc],dtype=float)
+    ## normalize by the size factor    
+    if size_factor is not None: 
+        X = normalize_by_size_factor(X,size_factor)
         
-    ## moment calculation
-    for i in range(k):
-        M_ml[:,i] = (X.power(i+1)).mean(axis=0)
-        
-    M11_ml = np.array((X.transpose().dot(X)/Nc).todense())
+    ## Mean 
+    mean_ml = X.mean(axis=0)
     
-    for i in range(k):
-        coef_ = np.poly1d(np.arange(i+1),True).coef
-        for j in range(coef_.shape[0]):
-            M[:,i] = M[:,i] + coef_[j]*M_ml[:,i-j]  
-            
+    ## Second moment
+    M2_ml = np.array((X.transpose().dot(X)/Nc).todense())  
+    
+    ## Covariance matrix
+    temp = mean_ml.reshape([G,1])
+    cov_ml = M2_ml - temp.dot(temp.T)
+    
+    ## Pearson correlation
+    std_ml = np.diag(cov_ml).clip(min=0)
+    std_ml = np.sqrt(std_ml)    
+    std_ml = std_ml.reshape([G,1])
+    PC_ml = cov_ml/(std_ml.dot(std_ml.T))
+    PC_ml = PC_ml.clip(min=-1,max=1)
+    
+    ## normalize by Nr:
+    mean_ml /= Nr
+    cov_ml /= Nr**2
     
     if verbose: 
-        fig_var_mean(M_ml,title='ml log10_var vs log10_mean, before size factor')
+        print('#total: %0.2fs'%(time.time()-start_time))
     
-    # adjustion by size factor 
-    for i in range(k):   
-        gamma_k = (gamma_c**(i+1)).mean()       
-        M[:,i] = M[:,i]/gamma_k
-        M_ml[:,i] = M_ml[:,i]/gamma_k    
-        
-        if k==2:
-            M11_ml = M11_ml/gamma_k
-        if verbose: 
-            print('M%d, sf=%0.4f'%(i+1,gamma_k))
-      
-    # calculating the PC   
-    temp_mu = M_ml[:,0].reshape(G,1)
-    temp_sig = np.sqrt((M[:,1]-M[:,0]**2).clip(min=1e-12,max=1e6)).reshape(G,1)
-    temp_sig_ml = np.sqrt((M_ml[:,1]-M_ml[:,0]**2).clip(min=1e-12)).reshape(G,1)
-    PC = (M11_ml-temp_mu.dot(temp_mu.T))/(temp_sig.dot(temp_sig.T))
-    PC_ml = (M11_ml-temp_mu.dot(temp_mu.T))/(temp_sig_ml.dot(temp_sig_ml.T))
-    
-    PC = PC.clip(max=1,min=-1)
-    PC_ml = PC_ml.clip(max=1,min=-1)    
-    if verbose: 
-        print('#time total: %0.4fs\n'%(time.time()-start_time)) 
-        
-        fig_var_mean(M_ml,title='ml log10_var vs log10_mean, after size factor')
-        
-        fig_var_mean(M,title='dd log10_var vs log10_mean, after size factor')
-        
-        fig_M2M1sqr(M,title='dd log10_M2 vs log10_mean^2, after size factor')
-
-    return PC,PC_ml,gene_name
+    return mean_ml,cov_ml,PC_ml  
 
 """
     estimate the zero probability
