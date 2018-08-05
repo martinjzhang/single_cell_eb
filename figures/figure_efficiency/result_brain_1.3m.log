@@ -1,0 +1,32 @@
+utils:: Variable names are not unique. To make them unique, call `.var_names_make_unique`.
+benchmark_efficiency:: # load data: 131.0057s
+
+scdd:: ## Nc=1306127, G=4000, Nr=4302.31, Nr_bar=1.08
+benchmark_efficiency:: # dd_1d_moment, i_rep=0, time=17.7817
+benchmark_efficiency:: # dd_1d_moment, i_rep=1, time=16.7711
+benchmark_efficiency:: # dd_1d_moment, i_rep=2, time=17.1207
+benchmark_efficiency:: # dd_1d_moment, i_rep=3, time=16.8417
+benchmark_efficiency:: # dd_1d_moment, i_rep=4, time=16.9750
+benchmark_efficiency:: # avg time=17.0980s, std=0.3621
+
+benchmark_efficiency:: # dd_covariance, i_rep=0, time=15133.7159
+benchmark_efficiency:: # dd_covariance, i_rep=1, time=14818.7680
+benchmark_efficiency:: # dd_covariance, i_rep=2, time=14540.1993
+benchmark_efficiency:: # dd_covariance, i_rep=3, time=15009.0279
+benchmark_efficiency:: # dd_covariance, i_rep=4, time=15503.6403
+benchmark_efficiency:: # avg time=15001.0703s, std=321.2074
+
+benchmark_efficiency:: # dd_inactive_prob, i_rep=0, time=110.2297
+benchmark_efficiency:: # dd_inactive_prob, i_rep=1, time=96.4716
+benchmark_efficiency:: # dd_inactive_prob, i_rep=2, time=94.8266
+benchmark_efficiency:: # dd_inactive_prob, i_rep=3, time=94.9000
+benchmark_efficiency:: # dd_inactive_prob, i_rep=4, time=94.7447
+benchmark_efficiency:: # avg time=98.2345s, std=6.0317
+
+benchmark_efficiency:: # time_dd_pairwise_inactive_prob, i_rep=0, time=46438.7820
+benchmark_efficiency:: # time_dd_pairwise_inactive_prob, i_rep=1, time=43269.6643
+benchmark_efficiency:: # time_dd_pairwise_inactive_prob, i_rep=2, time=43248.9878
+benchmark_efficiency:: # time_dd_pairwise_inactive_prob, i_rep=3, time=43289.7097
+benchmark_efficiency:: # time_dd_pairwise_inactive_prob, i_rep=4, time=43188.7560
+benchmark_efficiency:: # avg time=43887.1800s, std=1276.2487
+
