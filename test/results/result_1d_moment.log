@@ -1,0 +1,21 @@
+unit_test_1d_moment:: ## True moments
+unit_test_1d_moment:: 1-th moment: [0.305989   0.19048567 0.50352533]
+unit_test_1d_moment:: 2-th moment: [0.16576688 0.09696299 0.32358151]
+unit_test_1d_moment:: 3-th moment: [0.09430961 0.05253952 0.25322978]
+unit_test_1d_moment:: 4-th moment: [0.05581255 0.0300154  0.22396512]
+unit_test_1d_moment:: 
+unit_test_1d_moment:: ######## unit test: dd_1d_moment ########
+unit_test_1d_moment:: ## M_ml 
+unit_test_1d_moment:: [0.30489042 0.19051065 0.50395574]
+unit_test_1d_moment:: [0.22865857 0.13662789 0.42950478]
+unit_test_1d_moment:: [0.21223535 0.12150763 0.48089994]
+unit_test_1d_moment:: [0.23334854 0.12754684 0.65518897]
+unit_test_1d_moment:: 
+unit_test_1d_moment:: ## M_dd 
+unit_test_1d_moment:: [0.30489042 0.19051065 0.50395574]
+unit_test_1d_moment:: [0.16517833 0.09702316 0.32459092]
+unit_test_1d_moment:: [0.09496688 0.05237587 0.25495829]
+unit_test_1d_moment:: [0.05787588 0.02950145 0.22609297]
+unit_test_1d_moment:: 
+unit_test_1d_moment:: ## total time: 0.18s
+

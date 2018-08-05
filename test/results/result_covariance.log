@@ -1,0 +1,57 @@
+unit_test_covariance:: ## True mean
+unit_test_covariance:: [0.305989   0.19048567 0.50352533]
+unit_test_covariance:: ## True covariance matrix
+unit_test_covariance:: [ 0.07213833 -0.03138634 -0.04075199]
+unit_test_covariance:: [-0.03138634  0.06067881 -0.02929246]
+unit_test_covariance:: [-0.04075199 -0.02929246  0.07004445]
+unit_test_covariance:: ## True Pearson correlation
+unit_test_covariance:: [ 1.         -0.47439398 -0.57329596]
+unit_test_covariance:: [-0.47439398  1.         -0.44931458]
+unit_test_covariance:: [-0.57329596 -0.44931458  1.        ]
+unit_test_covariance:: 
+
+unit_test_covariance:: ######## unit test: dd_covariance ########
+unit_test_covariance:: ## dd mean 
+unit_test_covariance:: [0.30489042 0.19051065 0.50395574]
+unit_test_covariance:: 
+unit_test_covariance:: ## dd covariance matrix
+unit_test_covariance:: [ 0.07222016 -0.03131844 -0.04081504]
+unit_test_covariance:: [-0.03131844  0.06072886 -0.02920358]
+unit_test_covariance:: [-0.04081504 -0.02920358  0.07061953]
+unit_test_covariance:: 
+unit_test_covariance:: ## dd Pearson correlation
+unit_test_covariance:: [ 1.         -0.47290434 -0.57151631]
+unit_test_covariance:: [-0.47290434  1.         -0.44593972]
+unit_test_covariance:: [-0.57151631 -0.44593972  1.        ]
+unit_test_covariance:: 
+unit_test_covariance:: ## total time: 0.04s
+
+unit_test_covariance:: ######## unit test: ml_covariance ########
+unit_test_covariance:: ## ml mean 
+unit_test_covariance:: [0.30489042 0.19051065 0.50395574]
+unit_test_covariance:: 
+unit_test_covariance:: ## ml covariance matrix
+unit_test_covariance:: [ 0.1357004  -0.03131844 -0.04081504]
+unit_test_covariance:: [-0.03131844  0.10033359 -0.02920358]
+unit_test_covariance:: [-0.04081504 -0.02920358  0.17553339]
+unit_test_covariance:: 
+unit_test_covariance:: ## ml Pearson correlation
+unit_test_covariance:: [ 1.         -0.26840236 -0.26445381]
+unit_test_covariance:: [-0.26840236  1.         -0.22005593]
+unit_test_covariance:: [-0.26445381 -0.22005593  1.        ]
+unit_test_covariance:: 
+unit_test_covariance:: ## total time: 0.02s
+
+unit_test_covariance:: ######## unit test: ml brute force (comparison) ########
+unit_test_covariance:: ## ml_bf mean 
+unit_test_covariance:: [[0.30489042 0.19051065 0.50395574]]
+unit_test_covariance:: 
+unit_test_covariance:: ## ml_bf covariance matrix
+unit_test_covariance:: [ 0.13570176 -0.03131875 -0.04081545]
+unit_test_covariance:: [-0.03131875  0.10033459 -0.02920387]
+unit_test_covariance:: [-0.04081545 -0.02920387  0.17553515]
+unit_test_covariance:: 
+unit_test_covariance:: ## ml_bf Pearson correlation
+unit_test_covariance:: [ 1.         -0.26840236 -0.26445381]
+unit_test_covariance:: [-0.26840236  1.         -0.22005593]
+unit_test_covariance:: [-0.26445381 -0.22005593  1.        ]

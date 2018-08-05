@@ -1,0 +1,10 @@
+python tradeoff_simu.py 0&
+python tradeoff_simu.py 1&
+python tradeoff_simu.py 2&
+python tradeoff_simu.py 3&
+python tradeoff_simu.py 4&
+python tradeoff_simu.py 5&
+python tradeoff_simu.py 6&
+python tradeoff_simu.py 7&
+python tradeoff_simu.py 8&
+python tradeoff_simu.py 9&

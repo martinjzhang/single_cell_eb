@@ -1,0 +1,42 @@
+unit_test_dd_inactive_prob:: ## Nr=2.0017, kappa=5
+unit_test_dd_inactive_prob:: ## True dd_inactive_prob
+unit_test_dd_inactive_prob:: # [0.45748577 0.64371176 0.13805974]
+unit_test_dd_inactive_prob:: 
+unit_test_dd_inactive_prob:: ######## unit test: dd_inactive_prob ########
+unit_test_dd_inactive_prob:: ## p0_ml 
+unit_test_dd_inactive_prob:: [0.62746 0.76141 0.41591]
+unit_test_dd_inactive_prob:: 
+unit_test_dd_inactive_prob:: ## p0_dd 
+unit_test_dd_inactive_prob:: [0.45824804 0.64023896 0.13990048]
+unit_test_dd_inactive_prob:: 
+unit_test_dd_inactive_prob:: ## total time: 0.06s
+
+unit_test_dd_inactive_prob:: 
+unit_test_dd_inactive_prob:: ## Nr=4.0085, kappa=5
+unit_test_dd_inactive_prob:: ## True dd_inactive_prob
+unit_test_dd_inactive_prob:: # [0.45748577 0.64371176 0.13805974]
+unit_test_dd_inactive_prob:: 
+unit_test_dd_inactive_prob:: ######## unit test: dd_inactive_prob ########
+unit_test_dd_inactive_prob:: ## p0_ml 
+unit_test_dd_inactive_prob:: [0.4939  0.67039 0.20198]
+unit_test_dd_inactive_prob:: 
+unit_test_dd_inactive_prob:: ## p0_dd 
+unit_test_dd_inactive_prob:: [0.4570252  0.64365304 0.13695886]
+unit_test_dd_inactive_prob:: 
+unit_test_dd_inactive_prob:: ## total time: 0.04s
+
+unit_test_dd_inactive_prob:: 
+unit_test_dd_inactive_prob:: ## Nr=10.0274, kappa=5
+unit_test_dd_inactive_prob:: ## True dd_inactive_prob
+unit_test_dd_inactive_prob:: # [0.45748577 0.64371176 0.13805974]
+unit_test_dd_inactive_prob:: 
+unit_test_dd_inactive_prob:: ######## unit test: dd_inactive_prob ########
+unit_test_dd_inactive_prob:: ## p0_ml 
+unit_test_dd_inactive_prob:: [0.41114 0.60714 0.03579]
+unit_test_dd_inactive_prob:: 
+unit_test_dd_inactive_prob:: ## p0_dd 
+unit_test_dd_inactive_prob:: [0.45610713 0.64220064 0.13718392]
+unit_test_dd_inactive_prob:: 
+unit_test_dd_inactive_prob:: ## total time: 0.03s
+
+unit_test_dd_inactive_prob:: 
