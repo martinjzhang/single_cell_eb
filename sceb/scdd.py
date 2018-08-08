@@ -1358,8 +1358,8 @@ def error_p0(p0,p0_true):
 def cosine_distance(v1,v2):
     v1 /= np.linalg.norm(v1)
     v2 /= np.linalg.norm(v2)
-    d = 1-(v1.dot(v2))**2
-    #d = 1-np.absolute(v1.dot(v2))
+    #d = 1-(v1.dot(v2))**2
+    d = 1-np.absolute(v1.dot(v2))
     return d
 
 def d_PC(PC1,PC2):
