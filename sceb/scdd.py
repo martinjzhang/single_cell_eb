@@ -195,12 +195,23 @@ def dd_1d_moment(data,size_factor=None,verbose=True,k=2,Nr=1):
         print('#total: %0.2fs'%(time.time()-start_time))
     return M_ml,M_dd
 
-""" 
-    Calculate the covariance matrix as well as the 
-    PC (Pearson correlation) using ml and dd
-"""
 
-def dd_covariance(data,size_factor=None,verbose=True,return_ml=False,PC_prune=True):           
+
+def dd_covariance(data, size_factor=None, PC_prune=True, verbose=False):
+    """ EB estimation of the covariance matrix and the Pearson correlation matrix.
+    
+    Args:
+        data ():
+        size_factor ():
+        verbose (bool):
+        PC_prune (bool):
+        
+    Returns:
+        mean_dd ():
+        cov_dd ():
+        PC_dd ():
+    """
+    
     if verbose: 
         start_time=time.time()
         print('#time start: 0.0s')
@@ -274,7 +285,7 @@ def assign_row_weight_with_copy(X_,row_weight):
     X = (X.T.multiply(row_weight)).T.tocsr()
     return X
 
-def ml_covariance(data,size_factor=None,verbose=True):
+def ml_covariance(data, size_factor=None, verbose=False):
     if verbose: 
         start_time=time.time()
         print('#time start: 0.0s')
@@ -1393,3 +1404,38 @@ def get_fingerprint_2(mean_count):
         finger_print.append(mean_count[i])
     finger_print = np.array(finger_print)
     return finger_print
+
+def get_index(temp_list,gene_list):
+    temp_index = []
+    for i in temp_list:
+        temp_index.append(np.where(gene_list==i)[0][0])
+    return temp_index
+
+def marker_gene_heatmap(marker_gene_dic, gene_list, val):
+    def strip0(s):
+        if s[0]=='0':
+            return s[1:]
+        elif s[0] == '-' and s[1] =='0':
+            return '-'+s[2:]
+        else:
+            return s
+    marker_gene_list = []
+    marker_gene_group = []
+    for i_key,key in enumerate(marker_gene_dic):
+        for gene in marker_gene_dic[key]:
+            if gene in gene_list:
+                marker_gene_list.append(gene)
+                marker_gene_group.append(key+':'+gene)
+    n_gene = len(marker_gene_list)
+    idx_ = get_index(marker_gene_list,gene_list)
+    val = val[idx_,:][:,idx_]
+    plt.imshow(val,vmin=-1,vmax=1)  
+    
+    plt.xticks(np.arange(n_gene),marker_gene_list,rotation=45,fontsize=15)
+    plt.yticks(np.arange(n_gene),marker_gene_list,fontsize=15)
+    for i in range(n_gene):
+        for j in range(n_gene):
+            text = plt.text(j,i,'%s'%strip0('%0.2f'%val[i,j]),
+                           ha="center", va="center", color="w",fontsize=12)
+    cbar = plt.colorbar(fraction=0.046, pad=0.04)
+    cbar.ax.tick_params(labelsize=12)

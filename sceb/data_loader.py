@@ -277,10 +277,11 @@ def load_10x_6k():
     data.smp_names = np.genfromtxt(filename_barcodes, dtype=str)
     return data
 
-""" 
-    https://support.10xgenomics.com/single-cell-gene-expression/datasets/2.1.0/pbmc8k
-"""
+
 def load_10x_8k():
+    """ 
+        https://support.10xgenomics.com/single-cell-gene-expression/datasets/2.1.0/pbmc8k
+    """
     filename_data = '/data/martin/single_cell/10x_8k_PBMC/filtered_gene_bc_matrices/GRCh38/matrix.mtx'
     filename_genes = '/data/martin/single_cell/10x_8k_PBMC/filtered_gene_bc_matrices/GRCh38/genes.tsv'
     filename_barcodes = '/data/martin/single_cell/10x_8k_PBMC/filtered_gene_bc_matrices/GRCh38/barcodes.tsv'
@@ -290,10 +291,11 @@ def load_10x_8k():
     data.smp_names = np.genfromtxt(filename_barcodes, dtype=str)
     return data
 
-""" 
-    https://support.10xgenomics.com/single-cell-gene-expression/datasets/2.1.0/pbmc4k
-"""
+
 def load_10x_4k():
+    """ 
+        https://support.10xgenomics.com/single-cell-gene-expression/datasets/2.1.0/pbmc4k
+    """
     filename_data = '/data/martin/single_cell/10x_4k_PBMC/filtered_gene_bc_matrices/GRCh38/matrix.mtx'
     filename_genes = '/data/martin/single_cell/10x_4k_PBMC/filtered_gene_bc_matrices/GRCh38/genes.tsv'
     filename_barcodes = '/data/martin/single_cell/10x_4k_PBMC/filtered_gene_bc_matrices/GRCh38/barcodes.tsv'
@@ -303,10 +305,11 @@ def load_10x_4k():
     data.smp_names = np.genfromtxt(filename_barcodes, dtype=str)
     return data
 
-""" 
-    https://support.10xgenomics.com/single-cell-gene-expression/datasets/2.1.0/t_3k
-"""
+
 def load_10x_3k_panT():
+    """ 
+        https://support.10xgenomics.com/single-cell-gene-expression/datasets/2.1.0/t_3k
+    """
     filename_data = '/data/martin/single_cell/10x_3k_panT/filtered_gene_bc_matrices/GRCh38/matrix.mtx'
     filename_genes = '/data/martin/single_cell/10x_3k_panT/filtered_gene_bc_matrices/GRCh38/genes.tsv'
     filename_barcodes = '/data/martin/single_cell/10x_3k_panT/filtered_gene_bc_matrices/GRCh38/barcodes.tsv'
@@ -316,10 +319,11 @@ def load_10x_3k_panT():
     data.smp_names = np.genfromtxt(filename_barcodes, dtype=str)
     return data
 
-""" 
-    https://support.10xgenomics.com/single-cell-gene-expression/datasets/2.1.0/t_4k
-"""
+
 def load_10x_4k_panT():
+    """ 
+        https://support.10xgenomics.com/single-cell-gene-expression/datasets/2.1.0/t_4k
+    """
     filename_data = '/data/martin/single_cell/10x_4k_panT/filtered_gene_bc_matrices/GRCh38/matrix.mtx'
     filename_genes = '/data/martin/single_cell/10x_4k_panT/filtered_gene_bc_matrices/GRCh38/genes.tsv'
     filename_barcodes = '/data/martin/single_cell/10x_4k_panT/filtered_gene_bc_matrices/GRCh38/barcodes.tsv'

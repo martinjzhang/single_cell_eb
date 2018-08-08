@@ -1,7 +1,7 @@
 Metadata-Version: 1.0
 Name: sceb
 Version: 0.1
-Summary: Single Cell Empirical Bayes
+Summary: Single Cell Empirical Bayes: empirical Bayes estimators for distributional quantities of single cell gene distribution.
 Home-page: https://github.com/martinjzhang/single_cell_eb
 Author: Martin Zhang
 Author-email: jinye@stanford.edu

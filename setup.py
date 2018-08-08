@@ -7,7 +7,7 @@ import sys, os.path
 
 setup(name='sceb',
       version='0.1',
-      description='Single Cell Empirical Bayes',
+      description='Single Cell Empirical Bayes: empirical Bayes estimators for distributional quantities of single cell gene distribution.',
       url='https://github.com/martinjzhang/single_cell_eb',
       author='Martin Zhang',
       author_email='jinye@stanford.edu',
