@@ -24,10 +24,16 @@ import os
 from sceb.b_spline_nd import *
 from sceb.util import *
 
-"""
-    Print the size information of the dataset
-"""
 def get_info(data,logger=None):
+    """Print the size information of the dataset
+    
+    Args: 
+        data (AnnData): the scRNA-Seq CG (cell-gene) matrix.
+        
+    Returns:
+        The information of the data: Nc (# cells), G (# genes),
+            Nr (average # reads per cell), Nr_bar (average # reads per cell per gene).
+    """
     Nc,G = data.shape
     Nr = data.X.sum()/Nc
     Nr_bar = Nr/G
@@ -37,10 +43,15 @@ def get_info(data,logger=None):
         logger.info('## Nc=%d, G=%d, Nr=%0.2f, Nr_bar=%0.2f'%(Nc,G,Nr,Nr_bar))  
     return Nc,G,Nr,Nr_bar
 
-""" 
-    calculate the size factor
-"""
 def dd_size_factor(data,verbose=False):
+    """Calculate the size factor
+    
+    Args: 
+        data (AnnData): the scRNA-Seq CG (cell-gene) matrix.
+        
+    Returns:
+        size_factor((Nc,) ndarray): the cell size factors.
+    """
     X=data.X
     Nrc = np.array(X.sum(axis=1)).reshape(-1)
     Nr = Nrc.mean()
@@ -118,12 +129,20 @@ def subsample_anndata(adata,Nr_new,Nc_new,random_state=0,verbose=True):
         
     if verbose: print('#time sub-sample counts: %0.4fs\n'%(time.time()-start_time)) 
     return adata
+   
+def dd_1d_moment(data, size_factor=None, verbose=True, k=2, Nr=1):
+    """Calculate the moments using plug-in (ml) and EB (dd)
     
-""" 
-    calculate the moments using 1. ml, 2. dd
-"""
-
-def dd_1d_moment(data,size_factor=None,verbose=True,k=2,Nr=1):
+    Args: 
+        data (AnnData): The scRNA-Seq CG (cell-gene) matrix.
+        size_factor ((Nc,) ndarray): the cell size factor.
+        k (int): the number of moments to estimate.
+        
+    Returns:
+        M_ml ((k,G) ndarray): the plug-in estimates of the moments.
+        M_dd ((k,G) ndarray): the EB estimates of the moments.
+    """
+    
     if k>4:
         print('### The program only outputs at most 4 moments')    
     
@@ -194,22 +213,29 @@ def dd_1d_moment(data,size_factor=None,verbose=True,k=2,Nr=1):
     if verbose: 
         print('#total: %0.2fs'%(time.time()-start_time))
     return M_ml,M_dd
-
+"""calculate the size factor
+    
+    Args: 
+        data (AnnData): the scRNA-Seq CG (cell-gene) matrix.
+        
+    Returns:
+        size_factor((Nc,) ndarray): the cell size factors.
+    """
 
 
 def dd_covariance(data, size_factor=None, PC_prune=True, verbose=False):
     """ EB estimation of the covariance matrix and the Pearson correlation matrix.
     
     Args:
-        data ():
-        size_factor ():
-        verbose (bool):
-        PC_prune (bool):
+        data (AnnData): the scRNA-Seq CG (cell-gene) matrix.
+        size_factor ((Nc,) ndarray): the cell size_factor.
+        PC_prune (bool): if set the value to be zero for genes with small EB estimate variance (
+            due to stability consideration)
         
     Returns:
-        mean_dd ():
-        cov_dd ():
-        PC_dd ():
+        mean_dd ((G,) ndarray): the mean gene expression level.
+        cov_dd ((G,G) ndarray): the estimated covariance matrix.
+        PC_dd ((G,G) ndarray): the estimated Pearson correlation matrix.
     """
     
     if verbose: 
@@ -286,6 +312,17 @@ def assign_row_weight_with_copy(X_,row_weight):
     return X
 
 def ml_covariance(data, size_factor=None, verbose=False):
+    """ Plug-in estimation of the covariance matrix and the Pearson correlation matrix.
+    
+    Args:
+        data (AnnData): the scRNA-Seq CG (cell-gene) matrix.
+        size_factor ((Nc,) ndarray): the cell size_factor.
+        
+    Returns:
+        mean_ml ((G,) ndarray): the mean gene expression level.
+        cov_ml ((G,G) ndarray): the estimated covariance matrix.
+        PC_ml ((G,G) ndarray): the estimated Pearson correlation matrix.
+    """
     if verbose: 
         start_time=time.time()
         print('#time start: 0.0s')
@@ -898,6 +935,14 @@ def M_to_var(M):
     return var_
 
 def M_to_cv(M):
+    """ Convert the moments to coefficient of variation (cv)
+    
+    Args:
+        M ((k,G) ndarray): estimated moments.
+        
+    Returns:
+        cv ((G,) ndarray): estiamted cv.
+    """
     var_ = (M[1]-M[0]**2).clip(min=1e-18)
     cv_ = np.sqrt(var_)/M[0]
     return cv_
@@ -938,6 +983,15 @@ def get_rank(x):
     return rank
 
 def preprocess(data):
+    """ Clamp the data at the 99 quantile
+    
+    Args: 
+        data (AnnData): the scRNA-Seq CG (cell-gene) matrix.
+        
+    Returns:
+        data (AnnData): the preprocessed data.
+    """
+    
     data_ = data.copy()
     A = data_.X.data
     cap = np.percentile(A,99)
