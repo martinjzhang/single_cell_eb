@@ -213,15 +213,6 @@ def dd_1d_moment(data, size_factor=None, verbose=True, k=2, Nr=1):
     if verbose: 
         print('#total: %0.2fs'%(time.time()-start_time))
     return M_ml,M_dd
-"""calculate the size factor
-    
-    Args: 
-        data (AnnData): the scRNA-Seq CG (cell-gene) matrix.
-        
-    Returns:
-        size_factor((Nc,) ndarray): the cell size factors.
-    """
-
 
 def dd_covariance(data, size_factor=None, PC_prune=True, verbose=False):
     """ EB estimation of the covariance matrix and the Pearson correlation matrix.
