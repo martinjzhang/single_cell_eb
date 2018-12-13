@@ -3,6 +3,11 @@
     a self-contained module for moment estimation only
     some nice figure generation functions are included
     the data are assumed to be stored with an anndata format    
+    
+    Todo: 
+    1. unit test for dd_1d_moment and 1d inactive probability
+    2. check if the matrix sparse (compatible with scipy.sparse)
+    3. seems the functions in scanpy have changed. check subsample_anndata
 """
 
 import numpy as np
@@ -68,27 +73,25 @@ def dd_size_factor(data,verbose=False):
 """
     the subsample function for anndata input
 """
-def subsample_anndata(adata,Nr_new,Nc_new,random_state=0,verbose=True):
+def subsample_anndata(adata,Nr_new,Nc_new,random_state=0,verbose=True,return_cell_ind=False):
     np.random.seed(random_state)
     
     adata = adata.copy()
     if verbose: 
         start_time=time.time()
         print('#time start: 0.0s')
-    
-    ## sub-sample the cells
+    # Sub-sample the cells
     Nc,G=adata.shape
     Nr = adata.X.sum()/Nc
-    if verbose: print('before cell subsamp',adata.shape)
-    sc.pp.subsample(adata,Nc_new/Nc,random_state)
+    if verbose: 
+        print('before cell subsamp',adata.shape)
+    sc.pp.subsample(adata,fraction=Nc_new/Nc,random_state=random_state)
     Nc,G=adata.shape
     if verbose: 
         print('after cell subsamp',adata.shape)
         print('#time sub-sample cells: %0.4fs'%(time.time()-start_time)) 
-        
-        
-    
-    ## sub-sample the counts for each cell        
+        print(adata.X.sum(axis=0))            
+    # Sub-sample the counts for each cell        
     #Nr = adata.X.sum()/Nc
     downsample_rate = Nr_new/Nr  
     Nrc = np.array(adata.X.sum(axis=1)).reshape(-1)
@@ -109,15 +112,13 @@ def subsample_anndata(adata,Nr_new,Nc_new,random_state=0,verbose=True):
             for val,i_gene in zip(temp.data,temp.indices):
                 idx_gene.append(i_gene)
                 idx_vec.extend([i_gene]*val)
-            
             downsamp = np.random.choice(idx_vec,target_Nrc,replace=False)
             indices,values = np.unique(downsamp,return_counts=True)
-                       
+            
             ## set row value
             data_new.extend(list(values))
             indices_new.extend(list(indices))
             indptr_new.append(values.shape[0]+indptr_new[-1])
-            
         else:
             indptr_new.append(indptr_new[-1])
         
@@ -134,24 +135,21 @@ def dd_1d_moment(data, size_factor=None, verbose=True, k=2, Nr=1):
     """Calculate the moments using plug-in (ml) and EB (dd)
     
     Args: 
-        data (AnnData): The scRNA-Seq CG (cell-gene) matrix.
+        data (AnnData): The scRNA-Seq CG (cell-gene) matrix,
+            whose data is stored as a CSR sparse matrix.
         size_factor ((Nc,) ndarray): the cell size factor.
         k (int): the number of moments to estimate.
         
     Returns:
         M_ml ((k,G) ndarray): the plug-in estimates of the moments.
         M_dd ((k,G) ndarray): the EB estimates of the moments.
-    """
-    
+    """    
     if k>4:
-        print('### The program only outputs at most 4 moments')    
-    
+        print('## The program only outputs at most 4 moments')        
     if verbose: 
         start_time=time.time()
         print('#time start: 0.0s')
     Nc,G = data.shape
-    #Nr = data.X.sum()/Nc   
-    #Nr = 1 # fixit
     if verbose: 
         print('n_cell=%d, n_gene=%d'%(Nc,G))
     
@@ -162,25 +160,20 @@ def dd_1d_moment(data, size_factor=None, verbose=True, k=2, Nr=1):
     if size_factor is None: 
         row_weight = np.ones([Nc])
     else:
-        row_weight = 1/size_factor
-        
-    ## moment calculation
+        row_weight = 1/size_factor        
+    # Moment calculation
     if 1<=k:
         M1_ = sp.sparse.csc_matrix.dot(row_weight.reshape([1,-1]),X)
         M1_ = np.array(M1_).reshape(-1)/Nc
         M_ml[0] = M1_
-        M_dd[0] = M1_
-    
+        M_dd[0] = M1_    
     if 2<=k:
         M1_ = sp.sparse.csc_matrix.dot((row_weight**2).reshape([1,-1]),X)
         M1_ = np.array(M1_).reshape(-1)/Nc        
         M2_ = sp.sparse.csc_matrix.dot((row_weight**2).reshape([1,-1]),X.power(2))
-        M2_ = np.array(M2_).reshape(-1)/Nc
-        
+        M2_ = np.array(M2_).reshape(-1)/Nc        
         M_ml[1] = M2_
-        M_dd[1] = M2_ - M1_
-        
-    
+        M_dd[1] = M2_ - M1_    
     if 3<=k:
         M1_ = sp.sparse.csc_matrix.dot((row_weight**3).reshape([1,-1]),X)
         M1_ = np.array(M1_).reshape(-1)/Nc        
@@ -190,8 +183,7 @@ def dd_1d_moment(data, size_factor=None, verbose=True, k=2, Nr=1):
         M3_ = np.array(M3_).reshape(-1)/Nc
         
         M_ml[2] = M3_
-        M_dd[2] = M3_ - 3*M2_ + 2*M1_
-    
+        M_dd[2] = M3_ - 3*M2_ + 2*M1_    
     if 4<=k:
         M1_ = sp.sparse.csc_matrix.dot((row_weight**4).reshape([1,-1]),X)
         M1_ = np.array(M1_).reshape(-1)/Nc        
@@ -200,8 +192,7 @@ def dd_1d_moment(data, size_factor=None, verbose=True, k=2, Nr=1):
         M3_ = sp.sparse.csc_matrix.dot((row_weight**4).reshape([1,-1]),X.power(3))
         M3_ = np.array(M3_).reshape(-1)/Nc
         M4_ = sp.sparse.csc_matrix.dot((row_weight**4).reshape([1,-1]),X.power(4))
-        M4_ = np.array(M4_).reshape(-1)/Nc
-        
+        M4_ = np.array(M4_).reshape(-1)/Nc       
         M_ml[3] = M4_
         M_dd[3] = M4_ - 6*M3_ + 11*M2_ - 6*M1_    
     
@@ -218,7 +209,8 @@ def dd_covariance(data, size_factor=None, PC_prune=True, verbose=False):
     """ EB estimation of the covariance matrix and the Pearson correlation matrix.
     
     Args:
-        data (AnnData): the scRNA-Seq CG (cell-gene) matrix.
+        data (AnnData): the scRNA-Seq CG (cell-gene) matrix, 
+            whose data is stored as a CSR sparse matrix.
         size_factor ((Nc,) ndarray): the cell size_factor.
         PC_prune (bool): if set the value to be zero for genes with small EB estimate variance (
             due to stability consideration)
@@ -408,7 +400,6 @@ def dd_inactive_prob(data,relative_depth=1,size_factor=None,verbose=True):
         else:
             L=10
         w = smooth_zero_estimator(L,t=t_sub,n=n,require_param=False)
-        #print(w)
         p0_ml = np.zeros([G],dtype=float)
         p0_dd = np.zeros([G],dtype=float)
         A_dd = np.zeros([A.shape[0]],dtype=float)

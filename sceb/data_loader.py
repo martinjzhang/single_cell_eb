@@ -63,8 +63,10 @@ def poi_data_gen(p,x_grid,Nc=10000,Nr=5,G=2,require_X=False,sigma=0.2):
     else:
         return data,size_factor
     
-def poi_data_gen_nd(p,val,Nc=10000,Nr=5,sigma=0.2,random_seed=0):
-    np.random.seed(910624+random_seed)
+def poi_data_gen_nd(p, val, Nc=10000, Nr=5, sigma=0.2, random_seed=0):
+    """Add Poisson noise to the data.
+    """
+    np.random.seed(random_seed)
     val_size,G = val.shape
     rand_ind = np.random.choice(np.arange(val_size),Nc,p=p, replace=True)    
     X= val[rand_ind,:] 
@@ -90,12 +92,10 @@ def poi_data_gen_nd(p,val,Nc=10000,Nr=5,sigma=0.2,random_seed=0):
     
     return data,size_factor
 
-"""
-    a toy ann data, for testing the algorithms
-"""
-
-# fixit: incorporate dependency on the data 
 def load_toy_ann_data(verbose=False,Nc=100000,Nr=5,logger=None):
+    """
+    a toy ann data, for testing the algorithms
+    """
     np.random.seed(42)
     G = 3
     
@@ -128,10 +128,10 @@ def load_toy_ann_data(verbose=False,Nc=100000,Nr=5,logger=None):
     
     return data,X,size_factor
 
-"""
-    Zeisel data
-"""
 def load_Zeisel():
+    """
+    Zeisel data
+    """
     X_label={}
     fil_Zeisel='/data/martin/data/single_cell/Zeisel/expression_mRNA_17-Aug-2014.txt'
     f=open(fil_Zeisel,'rU')
@@ -164,11 +164,13 @@ def load_Zeisel():
     data_summary(X,X_label,gene_name)
     return X,X_label,gene_name
 
-"""
-    https://support.10xgenomics.com/single-cell-gene-expression/datasets/1.3.0/1M_neurons
-"""
+
 def load_10x_1_3mil():
-    filename_data='/data/martin/single_cell/10x_1.3mil_mice_brain/1M_neurons_filtered_gene_bc_matrices_h5.h5'
+    """
+    https://support.10xgenomics.com/single-cell-gene-expression/datasets/1.3.0/1M_neurons
+    """
+    filename_data='/data/martin/single_cell/10x_1.3mil_mice_brain/' +\
+                  '1M_neurons_filtered_gene_bc_matrices_h5.h5'
     data=sc.read_10x_h5(filename_data)
     return data
 
