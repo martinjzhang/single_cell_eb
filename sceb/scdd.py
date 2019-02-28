@@ -75,7 +75,6 @@ def dd_size_factor(data,verbose=False):
 """
 def subsample_anndata(adata,Nr_new,Nc_new,random_state=0,verbose=True,return_cell_ind=False):
     np.random.seed(random_state)
-    
     adata = adata.copy()
     if verbose: 
         start_time=time.time()
@@ -128,7 +127,8 @@ def subsample_anndata(adata,Nr_new,Nc_new,random_state=0,verbose=True,return_cel
     X_new = sp.sparse.csr_matrix((data_new, indices_new, indptr_new), shape=adata.shape)
     adata.X = X_new
         
-    if verbose: print('#time sub-sample counts: %0.4fs\n'%(time.time()-start_time)) 
+    if verbose: 
+        print('#time sub-sample counts: %0.4fs\n'%(time.time()-start_time)) 
     return adata
    
 def dd_1d_moment(data, size_factor=None, verbose=True, k=2, Nr=1):

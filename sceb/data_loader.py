@@ -186,10 +186,10 @@ def load_10x_1_3mil_subsample(opt=10):
     data=sc.read(filename_data)
     return data 
 
-"""
-    https://support.10xgenomics.com/single-cell-gene-expression/datasets/2.1.0/neurons_2000
-"""
 def load_10x_2k():
+    """
+        https://support.10xgenomics.com/single-cell-gene-expression/datasets/2.1.0/neurons_2000
+    """
     # 2k mice brain @ 100K rpc
     filename_data = '/data/martin/single_cell/10x_2k_brain_cell/filtered_gene_bc_matrices/mm10/matrix.mtx'
     filename_genes = '/data/martin/single_cell/10x_2k_brain_cell/filtered_gene_bc_matrices/mm10/genes.tsv'
@@ -200,10 +200,11 @@ def load_10x_2k():
     data.smp_names = np.genfromtxt(filename_barcodes, dtype=str)
     return data
 
-"""
-    https://support.10xgenomics.com/single-cell-gene-expression/datasets/2.1.0/neuron_9k
-"""
+
 def load_10x_9k():
+    """
+        https://support.10xgenomics.com/single-cell-gene-expression/datasets/2.1.0/neuron_9k
+    """
     filename_data = '/data/martin/single_cell/10x_9k_brain_cell_e18_mouse/filtered_gene_bc_matrices/mm10/matrix.mtx'
     filename_genes = '/data/martin/single_cell/10x_9k_brain_cell_e18_mouse/filtered_gene_bc_matrices/mm10/genes.tsv'
     filename_barcodes = '/data/martin/single_cell/10x_9k_brain_cell_e18_mouse/filtered_gene_bc_matrices/mm10/barcodes.tsv'
@@ -213,10 +214,11 @@ def load_10x_9k():
     data.smp_names = np.genfromtxt(filename_barcodes, dtype=str)
     return data
 
-"""
-    https://support.10xgenomics.com/single-cell-gene-expression/datasets/2.1.0/neurons_900
-"""
+
 def load_10x_1k():
+    """
+        https://support.10xgenomics.com/single-cell-gene-expression/datasets/2.1.0/neurons_900
+    """
     filename_data = '/data/martin/single_cell/10x_1k_brain_e18_mouse/filtered_gene_bc_matrices/mm10/matrix.mtx'
     filename_genes = '/data/martin/single_cell/10x_1k_brain_e18_mouse/filtered_gene_bc_matrices/mm10/genes.tsv'
     filename_barcodes = '/data/martin/single_cell/10x_1k_brain_e18_mouse/filtered_gene_bc_matrices/mm10/barcodes.tsv'
@@ -226,11 +228,10 @@ def load_10x_1k():
     data.smp_names = np.genfromtxt(filename_barcodes, dtype=str)
     return data
 
-
-"""
-    https://support.10xgenomics.com/single-cell-gene-expression/datasets/1.1.0/fresh_68k_pbmc_donor_a
-"""
 def load_10x_68k():
+    """
+        https://support.10xgenomics.com/single-cell-gene-expression/datasets/1.1.0/fresh_68k_pbmc_donor_a
+    """
     filename_data = '/data/martin/single_cell/10x_68k_PBMC/filtered_matrices_mex/hg19/matrix.mtx'
     filename_genes = '/data/martin/single_cell/10x_68k_PBMC/filtered_matrices_mex/hg19/genes.tsv'
     filename_barcodes = '/data/martin/single_cell/10x_68k_PBMC/filtered_matrices_mex/hg19/barcodes.tsv'
@@ -240,10 +241,10 @@ def load_10x_68k():
     data.smp_names = np.genfromtxt(filename_barcodes, dtype=str)
     return data
 
-"""
-    https://support.10xgenomics.com/single-cell-gene-expression/datasets/1.1.0/pbmc33k
-"""
 def load_10x_33k():
+    """
+        https://support.10xgenomics.com/single-cell-gene-expression/datasets/1.1.0/pbmc33k
+    """
     filename_data = '/data/martin/single_cell/10x_33k_pbmc/filtered_gene_bc_matrices/hg19/matrix.mtx'
     filename_genes = '/data/martin/single_cell/10x_33k_pbmc/filtered_gene_bc_matrices/hg19/genes.tsv'
     filename_barcodes = '/data/martin/single_cell/10x_33k_pbmc/filtered_gene_bc_matrices/hg19/barcodes.tsv'
@@ -253,10 +254,10 @@ def load_10x_33k():
     data.smp_names = np.genfromtxt(filename_barcodes, dtype=str)
     return data
 
-"""
-    https://support.10xgenomics.com/single-cell-gene-expression/datasets/1.1.0/pbmc3k
-"""
 def load_10x_3k():
+    """
+        https://support.10xgenomics.com/single-cell-gene-expression/datasets/1.1.0/pbmc3k
+    """
     filename_data = '/data/martin/single_cell/10x_3k_pbmc/filtered_gene_bc_matrices/hg19/matrix.mtx'
     filename_genes = '/data/martin/single_cell/10x_3k_pbmc/filtered_gene_bc_matrices/hg19/genes.tsv'
     filename_barcodes = '/data/martin/single_cell/10x_3k_pbmc/filtered_gene_bc_matrices/hg19/barcodes.tsv'
@@ -266,10 +267,10 @@ def load_10x_3k():
     data.smp_names = np.genfromtxt(filename_barcodes, dtype=str)
     return data
 
-"""
-    https://support.10xgenomics.com/single-cell-gene-expression/datasets/1.1.0/pbmc6k
-"""
 def load_10x_6k():
+    """
+        https://support.10xgenomics.com/single-cell-gene-expression/datasets/1.1.0/pbmc6k
+    """
     filename_data = '/data/martin/single_cell/10x_pbmc_6k/filtered_matrices_mex/hg19/matrix.mtx'
     filename_genes = '/data/martin/single_cell/10x_pbmc_6k/filtered_matrices_mex/hg19/genes.tsv'
     filename_barcodes = '/data/martin/single_cell/10x_pbmc_6k/filtered_matrices_mex/hg19/barcodes.tsv'
@@ -333,6 +334,18 @@ def load_10x_4k_panT():
     data = sc.read(filename_data, cache=True).transpose()
     data.var_names = np.genfromtxt(filename_genes, dtype=str)[:, 1]
     data.smp_names = np.genfromtxt(filename_barcodes, dtype=str)
+    return data
+
+def load_10x_ercc_1k():
+    """ 
+        https://support.10xgenomics.com/single-cell-gene-expression/datasets/1.1.0/ercc
+    """
+    filename_data = '/data/martin/single_cell/10x_ERCC_1k/filtered_matrices_mex/ercc92/matrix.mtx'
+    filename_genes = '/data/martin/single_cell/10x_ERCC_1k/filtered_matrices_mex/ercc92/genes.tsv'
+    filename_barcodes = '/data/martin/single_cell/10x_ERCC_1k/filtered_matrices_mex/ercc92/barcodes.tsv'
+    data = sc.read(filename_data, cache=True).transpose()
+    data.var_names = np.genfromtxt(filename_genes, dtype=str)[:, 1]
+    data.obs_names = np.genfromtxt(filename_barcodes, dtype=str)
     return data
 
 """ 
@@ -404,9 +417,60 @@ def load_10x_12k_mix_mouse():
     data.smp_names = np.genfromtxt(filename_barcodes, dtype=str)
     return data
 
+def load_ercc_info():
+    # ERCC info
+    df_ercc = pd.read_csv('/data/martin/single_cell/ERCC_data/ercc-info.txt', sep='\t')
+    df_ercc = df_ercc.set_index(df_ercc.iloc[:,0])
+    df_ercc = df_ercc.iloc[:,[2,3]]
+    return df_ercc
+
+def load_klein():
+    df_klein = pd.read_csv('/data/martin/single_cell/klein/data', sep=',')
+    index_name = list(df_klein.iloc[:,0])
+    mat_klein = np.array(df_klein.iloc[:,1:].as_matrix(),dtype=int).T
+    # Convert to AnnData
+    temp = sp.sparse.csr_matrix(mat_klein)
+    data_klein = sc.AnnData(temp)
+    data_klein.var_names = index_name
+    return data_klein
+
+def load_klein_ercc():
+    df_klein_ercc = pd.read_csv('/data/martin/single_cell/ERCC_data/ERCC/klein.txt', sep=' ')
+    index_name = list(df_klein_ercc.index)
+    mat_klein_ercc = np.array(df_klein_ercc.as_matrix()).T 
+    # Convert to AnnData 
+    temp = sp.sparse.csr_matrix(mat_klein_ercc)
+    data_klein_ercc = sc.AnnData(temp)
+    data_klein_ercc.var_names = index_name
+    return data_klein_ercc
+
+def load_svensson_1x():
+    input_folder = '/data/martin/single_cell/ERCC_data/ERCC'
+    df_s1_ercc = pd.read_csv('/data/martin/single_cell/ERCC_data/ERCC/svensson1X.txt', sep=' ')
+    index_name = list(df_s1_ercc.index)
+    mat_s1_ercc = np.array(df_s1_ercc.as_matrix()).T 
+    # Convert to AnnData 
+    temp = sp.sparse.csr_matrix(mat_s1_ercc)
+    data_s1_ercc = sc.AnnData(temp)
+    data_s1_ercc.var_names = index_name
+    return data_s1_ercc
+
+def load_svensson_2x():
+    input_folder = '/data/martin/single_cell/ERCC_data/ERCC'
+    df_s2_ercc = pd.read_csv('/data/martin/single_cell/ERCC_data/ERCC/svensson2X.txt', sep=' ')
+    index_name = list(df_s2_ercc.index)
+    mat_s2_ercc = np.array(df_s2_ercc.as_matrix()).T 
+    # Convert to AnnData 
+    temp = sp.sparse.csr_matrix(mat_s2_ercc)
+    data_s2_ercc = sc.AnnData(temp)
+    data_s2_ercc.var_names = index_name
+    return data_s2_ercc
+
 def data_summary(X,X_label,gene_name):
     print('###### Summary ######')
     print('GC matrix: ',X.shape)
     print('number of genes:', len(gene_name))
     #print 'number of clusters:', np.unique(X_label).shape[0]
     print('###### End Summary ######')
+    
+    
