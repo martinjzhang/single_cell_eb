@@ -37,7 +37,7 @@
 # data
 The data are downloaded locally with path specified inside ./sceb/data_loader. See ./examples/PC_estimation_pbmc_4k.ipynb for an example of defining a data loader function. 
 
-The datasets that we use are from 10x genomics v2 chemistry [1]. pbmc_4k, pbmc_8k contain peripheral blood mononuclear cells (PBMCs) from a healthy donor (the same donor). brain_1k, brain_2k, brain_9k, brain_1.3m contain cells from a combined cortex, hippocampus and sub ventricular zone of an E18 mouse. The pair 293T_1k, 3T3_1k contain 1:1 mixture of fresh frozen human (HEK293T) and mouse (NIH3T3) cells. So are the pair 293T_6k, 3T3_6k and the pair 293T_12k, 3T3_12k. The links of the data links: 
+The datasets that we use are from 10x genomics v2 chemistry "[Zheng et al. 2017](nature.com/articles/ncomms14049)". pbmc_4k, pbmc_8k contain peripheral blood mononuclear cells (PBMCs) from a healthy donor (the same donor). brain_1k, brain_2k, brain_9k, brain_1.3m contain cells from a combined cortex, hippocampus and sub ventricular zone of an E18 mouse. The pair 293T_1k, 3T3_1k contain 1:1 mixture of fresh frozen human (HEK293T) and mouse (NIH3T3) cells. So are the pair 293T_6k, 3T3_6k and the pair 293T_12k, 3T3_12k. The links of the data links: 
 
 - pbmc_4k: https://support.10xgenomics.com/single-cell-gene-expression/datasets/2.1.0/pbmc4k
 - pbmc_8k: https://support.10xgenomics.com/single-cell-gene-expression/datasets/2.1.0/pbmc8k
@@ -56,6 +56,3 @@ The datasets that we use are from 10x genomics v2 chemistry [1]. pbmc_4k, pbmc_8
 
 
 # ./test: unit tests
-
-# References
-[1] Zheng, Grace XY, et al. "Massively parallel digital transcriptional profiling of single cells." Nature communications 8 (2017): 14049.
