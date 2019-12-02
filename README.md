@@ -29,7 +29,7 @@
 
 - Supp. Figs. 15-17: `figure_ercc.ipynb`
 
-- Supp. Fig. 18: `clean_PBMC_Ding_Levin_2019.ipynb` for curating the data from "[Ding et al 2019](https://www.biorxiv.org/content/10.1101/632216v2)" and `figure_sensitivity_analysis.ipynb` for the analysis
+- Supp. Fig. 18: `clean_PBMC_Ding_Levin_2019.ipynb` for curating the data from "[Ding et al. 2019](https://www.biorxiv.org/content/10.1101/632216v2)" and `figure_sensitivity_analysis.ipynb` for the analysis
 
 # ./figures: The figures appeared in the paper as well as the simulated data to generate them.
 
@@ -48,11 +48,11 @@ The datasets that we use are from 10x genomics v2 chemistry [1]. pbmc_4k, pbmc_8
 - 293T_1k, 3T3_1k: https://support.10xgenomics.com/single-cell-gene-expression/datasets/2.1.0/hgmm_1k
 - 293T_6k, 3T3_6k: https://support.10xgenomics.com/single-cell-gene-expression/datasets/2.1.0/hgmm_6k
 - 293T_12k, 3T3_12k: https://support.10xgenomics.com/single-cell-gene-expression/datasets/2.1.0/hgmm_12k
-- Dropseq data and the corresponding smFISH data: from "[Wang et al 2018](https://www-pnas-org.ezp-prod1.hul.harvard.edu/content/115/28/E6437.long)" 
-- CEL-seq data and the corresonding smFISH data: the CEL-seq data can be found from "[Grün et al 2014](nature.com/articles/nmeth.2930)". The smFISH can be found by contacting the author of the paper (e.g., Dr. Grün).
-- The three ERCC datasets (Zheng, Klein, Svensson): from "[Wang et al 2018](https://www-pnas-org.ezp-prod1.hul.harvard.edu/content/115/28/E6437.long)" 
-- The Klein dataset with the pure RNA controls: from "[Svensson et al 2017](nature.com/articles/nmeth.4220)"
-- The data for sensitivity analysis: from "[Ding et al 2019](https://www.biorxiv.org/content/10.1101/632216v2)"
+- Dropseq data and the corresponding smFISH data: from "[Wang et al. 2018](https://www-pnas-org.ezp-prod1.hul.harvard.edu/content/115/28/E6437.long)" 
+- CEL-seq data and the corresonding smFISH data: the CEL-seq data can be found from "[Grün et al. 2014](nature.com/articles/nmeth.2930)". The smFISH can be found by contacting the author of the paper (e.g., Dr. Grün).
+- The three ERCC datasets (Zheng, Klein, Svensson): from "[Wang et al. 2018](https://www-pnas-org.ezp-prod1.hul.harvard.edu/content/115/28/E6437.long)" 
+- The Klein dataset with the pure RNA controls: from "[Svensson et al. 2017](nature.com/articles/nmeth.4220)"
+- The data for sensitivity analysis: from "[Ding et al. 2019](https://www.biorxiv.org/content/10.1101/632216v2)"
 
 
 # ./test: unit tests
