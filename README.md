@@ -1,29 +1,31 @@
 # sceb: 'single-cell empirical Bayes'
-- Empirical Bayes estimators for single-cell RNA-Seq analysis, accompanying the paper "[One read per cell per gene is optimal for single-cell RNA-Seq](https://doi.org/10.1101/389296)".
+- Empirical Bayes estimators for single-cell RNA-Seq analysis, accompanying the paper "[Determining sequencing depth in a single-cell RNA-seq experiment](https://doi.org/10.1101/389296)".
 - Installation: pip install sceb
 - See ./examples/example_pbmc_4k.ipynb for an example for estimating the Pearson correlation.
 
-# ./experiments: the code that can reproduce all figures in the paper.
+# ./experiments: the code that reproduces all figures in the paper.
 
-- Fig. 1b-c, Supp. Figs. 1-3: figure_gamma_schema.ipynb
+- Fig. 1b-c, Fig. 2b top, Supp. Figs. 1-3: figure_gamma_schema.ipynb
 
-- Fig. 1d: The simulation is done using compute_figure_tradeoff_curve.ipynb and the figures are generated using figure_tradeoff_curve.ipynb
+- Fig. 2a: The simulation is done using compute_figure_tradeoff_curve.ipynb and the figures are generated using figure_tradeoff_curve.ipynb
 
 - Supp. Fig. 4: The simulation is done using tradeoff_simu.py called by call_tradeoff_simu.sh. The figures are generated using figure_tradeoff_simu.ipynb
 
-- Fig. 1e, Supp. Figs. 5-6: The simulations are done using tradeoff_posthoc_guide_pbmc.py (Supp. Fig. 5) and tradeoff_posthoc_guide_brain.py (Supp. Fig. 6). The figures are generated using figure_tradeoff_posthoc.ipynb
+- Fig. 2b: Supp. Figs. 5-6: The simulations are done using tradeoff_posthoc_guide_pbmc.py (Supp. Fig. 5) and tradeoff_posthoc_guide_brain.py (Supp. Fig. 6). The figures are generated using figure_tradeoff_posthoc.ipynb
 
-- Fig. 2a top, Supp. Fig. 7: figure_subsample_specturm.ipynb
+- Fig. 3a top, Supp. Fig. 7: figure_subsample_specturm.ipynb
 
-- Fig. 2a middle, Supp. Figs. 8-9: figure_consistency.ipynb
+- Fig. 3a middle, Supp. Figs. 8-9: figure_consistency.ipynb
 
-- Fig. 2a bottom, Supp. Fig. 10: figure_dist_reconstruction.ipynb
+- Fig. 3a bottom, Supp. Fig. 10: figure_dist_reconstruction.ipynb
 
-- Fig. 2b: figure_feature_selection.ipynb
+- Fig. 3b: figure_feature_selection.ipynb
 
-- Fig. 2c: figure_gene_module.ipynb
+- Fig. 4a: figure_gene_module.ipynb
 
-- Fig. 2d: The network data is generated using figure_gene_network.ipynb and analyzed using Gephi (an external software). The examples are generated using figure_network_example.ipynb
+- Fig. 4b-c: The network data is generated using figure_gene_network.ipynb and analyzed using Gephi (an external software). The examples are generated using figure_network_example.ipynb
+
+- Fig. 5a-b: Comparison between Dropseq data and smFISH data was one in `figure_Dropseq_smFISH.ipynb`. 
 
 # ./figures: The figures appeared in the paper as well as the simulated data to generate them.
 
