@@ -3,7 +3,9 @@
 - Installation: pip install sceb
 - See ./examples/example_pbmc_4k.ipynb for an example for estimating the Pearson correlation.
 
-# ./experiments: the code that reproduces all figures in the paper.
+# ./experiments: 
+
+The code that reproduces all figures in the paper.
 
 - Fig. 1b-c, Fig. 2b top, Supp. Figs. 1-3: `figure_gamma_schema.ipynb`
 
@@ -31,13 +33,15 @@
 
 - Supp. Fig. 18: `clean_PBMC_Ding_Levin_2019.ipynb` for curating the data from "[Ding et al. 2019](https://www.biorxiv.org/content/10.1101/632216v2)" and `figure_sensitivity_analysis.ipynb` for the analysis
 
-# ./figures: The figures appeared in the paper as well as the simulated data to generate them.
+# ./figures: 
 
+The figures that appeared in the paper as well as the simulated data to generate them.
 
-# data
-The data are downloaded locally with path specified inside ./sceb/data_loader. See ./examples/PC_estimation_pbmc_4k.ipynb for an example of defining a data loader function. 
+# DATASETS
+The datasets are publicly available and their local path are specified inside ./sceb/data_loader. See ./examples/PC_estimation_pbmc_4k.ipynb for an example of defining a data loader function. 
 
-The datasets that we use are from 10x genomics v2 chemistry "[Zheng et al. 2017](nature.com/articles/ncomms14049)". pbmc_4k, pbmc_8k contain peripheral blood mononuclear cells (PBMCs) from a healthy donor (the same donor). brain_1k, brain_2k, brain_9k, brain_1.3m contain cells from a combined cortex, hippocampus and sub ventricular zone of an E18 mouse. The pair 293T_1k, 3T3_1k contain 1:1 mixture of fresh frozen human (HEK293T) and mouse (NIH3T3) cells. So are the pair 293T_6k, 3T3_6k and the pair 293T_12k, 3T3_12k. The links of the data links: 
+### 10x datasets
+The datasets that we use are from 10x genomics v2 chemistry "[Zheng et al. 2017](nature.com/articles/ncomms14049)". pbmc_4k, pbmc_8k contain peripheral blood mononuclear cells (PBMCs) from a healthy donor (the same donor). brain_1k, brain_2k, brain_9k, brain_1.3m contain cells from a combined cortex, hippocampus and sub ventricular zone of an E18 mouse. The pair of 293T_1k/3T3_1k contain 1:1 mixture of fresh frozen human (HEK293T) and mouse (NIH3T3) cells. So are the pair 293T_6k/3T3_6k, and the pair 293T_12k/3T3_12k. The data were downloaded from the 10x website and the links are provided as beblow. We used the filtered gene/cell matrix `Gene / cell matrix (filtered)` from the links.
 
 - pbmc_4k: https://support.10xgenomics.com/single-cell-gene-expression/datasets/2.1.0/pbmc4k
 - pbmc_8k: https://support.10xgenomics.com/single-cell-gene-expression/datasets/2.1.0/pbmc8k
@@ -48,11 +52,15 @@ The datasets that we use are from 10x genomics v2 chemistry "[Zheng et al. 2017]
 - 293T_1k, 3T3_1k: https://support.10xgenomics.com/single-cell-gene-expression/datasets/2.1.0/hgmm_1k
 - 293T_6k, 3T3_6k: https://support.10xgenomics.com/single-cell-gene-expression/datasets/2.1.0/hgmm_6k
 - 293T_12k, 3T3_12k: https://support.10xgenomics.com/single-cell-gene-expression/datasets/2.1.0/hgmm_12k
+
+
+### Other datasets 
 - Dropseq data and the corresponding smFISH data: from "[Wang et al. 2018](https://www-pnas-org.ezp-prod1.hul.harvard.edu/content/115/28/E6437.long)" 
 - CEL-seq data and the corresonding smFISH data: the CEL-seq data can be found from "[Grün et al. 2014](nature.com/articles/nmeth.2930)". The smFISH can be found by contacting the author of the paper (e.g., Dr. Grün).
 - The three ERCC datasets (Zheng, Klein, Svensson): from "[Wang et al. 2018](https://www-pnas-org.ezp-prod1.hul.harvard.edu/content/115/28/E6437.long)" 
 - The Klein dataset with the pure RNA controls: from "[Svensson et al. 2017](nature.com/articles/nmeth.4220)"
 - The data for sensitivity analysis: from "[Ding et al. 2019](https://www.biorxiv.org/content/10.1101/632216v2)"
+
 
 
 # ./test: unit tests
