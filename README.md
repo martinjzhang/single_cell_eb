@@ -1,5 +1,5 @@
 # sceb: 'single-cell empirical Bayes'
-- Empirical Bayes estimators for single-cell RNA-Seq analysis, accompanying the paper "[Determining sequencing depth in a single-cell RNA-seq experiment](https://doi.org/10.1101/389296)".
+- Empirical Bayes estimators for single-cell RNA-Seq analysis, accompanying the paper "[Determining sequencing depth in a single-cell RNA-seq experiment](https://www.nature.com/articles/s41467-020-14482-y)". Previous biorxiv version: "[One read per cell per gene is optimal for single-cell RNA-Seq](https://www.biorxiv.org/content/10.1101/389296v2)"
 - Installation: pip install sceb
 - See ./examples/example_pbmc_4k.ipynb for an example for estimating the Pearson correlation.
 
